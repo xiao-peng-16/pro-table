@@ -28,10 +28,6 @@ export const sourceEnum = [
   { value: 'admin', label: '后台创建' },
 ]
 
-const deptNameMap = new Map(deptEnum.map(item => [item.value, item.label]))
-const roleNameMap = new Map(roleEnum.map(item => [item.value, item.label]))
-const genderNameMap = new Map(genderEnum.map(item => [item.value, item.label]))
-const sourceNameMap = new Map(sourceEnum.map(item => [item.value, item.label]))
 const currentYear = new Date().getFullYear()
 
 const createMockUsers = count => {
@@ -54,16 +50,12 @@ const createMockUsers = count => {
       nickName: `测试用户${index}`,
       email: `user${index}@example.com`,
       gender,
-      genderLabel: genderNameMap.get(gender) ?? '未知',
       phone: `1380000${String(index).padStart(4, '0')}`,
       jobNo: `JOB${String(5000 + index)}`,
       loginIp: `10.10.${index % 20}.${(index % 250) + 1}`,
       registerSource: source,
-      registerSourceLabel: sourceNameMap.get(source) ?? '未知来源',
       deptId,
-      deptName: deptNameMap.get(deptId) ?? '未知部门',
       roleCode,
-      roleName: roleNameMap.get(roleCode) ?? '未知角色',
       status,
       lastLoginTime: `${currentYear}-03-${loginDay} ${loginHour}:20:00`,
       createTime: `${currentYear}-02-${createDay} ${createHour}:00:00`,

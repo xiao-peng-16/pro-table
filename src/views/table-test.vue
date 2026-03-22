@@ -1,10 +1,9 @@
 <template>
   <ProTable
-    row-key="userId"
     :filters="filters"
     :columns="columns"
     :get-table-data="getData"
-    custom-id="pro-table-test2"
+    custom-id="pro-table-test1"
   >
       <!-- 表格顶部按钮插槽 -->
       <template #table-top>
@@ -138,7 +137,8 @@ const columns: TableColumnItem[] = [
   },
   {
     label: '性别',
-    prop: 'genderLabel',
+    prop: 'gender',
+    enumItems: genderEnum,
     width: 90,
   },
   {
@@ -153,17 +153,20 @@ const columns: TableColumnItem[] = [
   },
   {
     label: '注册来源',
-    prop: 'registerSourceLabel',
+    prop: 'registerSource',
+    enumItems: sourceEnum,
     minWidth: 120,
   },
   {
     label: '部门',
-    prop: 'deptName',
+    prop: 'deptId',
+    enumItems: deptEnum,
     width: 120,
   },
   {
     label: '角色',
-    prop: 'roleName',
+    prop: 'roleCode',
+    enumItems: roleEnum,
     width: 140,
   },
   {

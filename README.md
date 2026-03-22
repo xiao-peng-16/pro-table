@@ -1,5 +1,5 @@
 [案例截图](#demo_img) | 
-[代码案例](#基础用法) | 
+[代码案例](#demo_code) | 
 [详细文档](./src/components/base/ProTable/types/index.ts)  
 
 ## ProTable 使用说明
@@ -64,7 +64,7 @@
 
 这也是 `customId` 最直接的使用价值之一：不同页面可以保存各自独立的字段配置，不会互相污染。
 
-### 3. 基础用法
+### 3. <span id="demo_code">基础用法</span>
 [详细文档](./src/components/base/ProTable/types/index.ts)
 仓库里现有的真实接入示例在 `src/views/table-test.vue`，最小使用方式如下：
 

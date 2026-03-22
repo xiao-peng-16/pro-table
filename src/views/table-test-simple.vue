@@ -52,7 +52,7 @@ const filters = computed<FilterItem[]>(() => [
 ])
 
 // 列表字段
-const columns: TableColumnItem[] = [
+const columns = computed<TableColumnItem[]>(() => [
   {
     type: 'selection',
     width: 50,
@@ -74,7 +74,7 @@ const columns: TableColumnItem[] = [
     fixed: 'right',         // 右对齐 （详情参考 src\components\base\ProTable\types\index.ts）
     width: 180,
   },
-]
+])
 
 // 获取数据方法
 const getData = async (param): Promise<PageResponse<any>> => {

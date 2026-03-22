@@ -1,0 +1,76 @@
+.layout-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--layout-wrapper-bg-color);
+  .layout-left {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    box-sizing: border-box;
+    background: var(--left-menu-bg-color);
+    border-right: var(--layout-left-border-width) solid var(--layout-left-border-color);
+    transition: all 0.2 !important;
+  }
+  .layout-content {
+    height: 100%;
+    position: absolute;
+    transition: all 0.2;
+    .layout-content__top {
+      z-index: 10;
+      background: var(--top-header-bg-color);
+    }
+    // 顶部fixed固定
+    .layout-content__top_fixed {
+      width: inherit;
+      position: fixed;
+      top: 0;
+    }
+    .layout-content__app-wrapper {
+      box-sizing: border-box;
+      padding: var(--app-content-wrapper-padding);
+      .layout-content-app {
+        padding: var(--app-content-padding);
+        background: var(--app-content-bg-color);
+      }
+    }
+  }
+
+}
+
+// .collapse | .not-collapse 菜单栏是否折叠
+// .mobile | .not-mobile 是否手机移动端
+// 折叠
+.layout-wrapper.collapse {
+  .layout-left {
+    width: var(--left-menu-min-width);
+  }
+  .layout-content {
+    left: var(--left-menu-min-width);
+    width: calc(100% - var(--left-menu-min-width));
+  }
+}
+
+// 展开
+.layout-wrapper.not-collapse {
+  .layout-left{
+    width: var(--left-menu-max-width);
+  }
+  .layout-content{
+    left: var(--left-menu-max-width);
+    width: calc(100% - var(--left-menu-max-width));
+  }
+}
+
+// 移动端
+.layout-wrapper.collapse.mobile, .layout-wrapper.not-collapse.mobile {
+  .layout-left{
+    padding: 0;
+  }
+  .layout-content{
+
+    left: 0;
+    width: 100%;
+  }
+}

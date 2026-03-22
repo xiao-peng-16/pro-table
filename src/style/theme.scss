@@ -1,0 +1,185 @@
+:root {
+  --text-color-primary: #202d40;
+
+  // 输入框 按钮等背景填充色透明
+  --el-fill-color-blank: transparent;
+
+  .el-table {
+    // 表头颜色
+    --el-table-header-text-color: var(--text-color-primary);
+    // hover行
+    --el-table-row-hover-bg-color: #cce2ff;
+    // 当前行
+    --el-table-current-row-bg-color: #cce2ff;
+  }
+
+  // 布局 公共配置
+  .layout-wrapper {
+
+    // logo 高度
+    --logo-height: 45px;
+    // 顶部工具栏高度
+    --top-tool-height: var(--logo-height);
+    // 顶部标签页高度
+    --tags-view-height: 35px;
+    // 左侧菜单栏缩小时最小宽度
+    --left-menu-min-width: 64px;
+    // 左侧菜单栏展开时最大宽度
+    --left-menu-max-width: 200px;
+    // app-content-wrapper 相关参数
+    --app-content-wrapper-padding: 10px;
+    // app-content 相关参数
+    --app-content-padding: 10px;
+
+  }
+
+  // 默认主题 非默认会覆盖这个
+  .system-theme {
+
+    // 登录页
+    .login-wrapper {
+      --login-from-bg-color: #FFFFFF;
+      --login-from-border-color: transparent;
+    }
+    // 布局
+    .layout-wrapper {
+      // 背景色
+      --layout-wrapper-bg-color: #ffffff;
+      // 左侧菜单栏
+      .layout-left {
+        // 左侧菜单栏有边框颜色
+        --layout-left-border-color: transparent;
+        // 左侧菜单栏有边框宽度
+        --layout-left-border-width: 1px;
+        // 左侧菜单栏搜索框背景填充色
+        --el-fill-color-blank: #353f53;
+        // 左侧菜单栏搜索框边框颜色
+        --el-border-color: #4c4d4f;
+        // 改了el-border-color 刷新一下el-border
+        --el-border: var(--el-border-width) var(--el-border-style) var(--el-border-color);
+        // 左侧菜单栏背景|文字颜色
+        --left-menu-bg-color: #131d35; // #001529
+        --el-menu-bg-color: var(--left-menu-bg-color);
+        --left-menu-text-color: #BFCBD9;
+        --el-menu-text-color: var(--left-menu-text-color);
+        // 左侧菜单栏子菜单背景颜色
+        --left-menu-sub: #1b2a3b;
+        // 左侧菜单栏hover背景|文字颜色
+        --left-menu-hover-bg-color: #2c3e5e;
+        --el-menu-hover-bg-color: var(--left-menu-hover-bg-color);
+        --left-menu-hover-text-color: #BFCBD9;
+        // 左侧菜单栏active背景|文字颜色
+        --left-menu-active-bg-color: #2c3e5e;
+        --left-menu-active-text-color: #409eff;;
+        --el-menu-active-color: var(--left-menu-active-text-color);
+        // 顶部背景色
+        --top-header-bg-color: #ffffff;
+      }
+
+      & {
+        // --top-header-text-color: 'inherit';
+        // app-content-wrapper 背景色
+        --app-content-bg-color: #ffffff;
+
+
+        // 搜索条件边框颜色
+        --filter-border: #dfe2e6;
+      }
+    }
+  }
+
+
+  // 布局 明亮主题
+  .system-theme.system-theme-light {
+
+    // 布局
+    .layout-wrapper {
+      // 左侧菜单栏
+      .layout-left {
+        // 左侧菜单栏有边框颜色
+        --layout-left-border-color: #dcdfe6;
+        // 左侧菜单栏搜索框背景填充色
+        --el-fill-color-blank: #ffffff;
+        // 左侧菜单栏搜索框边框颜色
+        --el-border-color: #dcdfe6;
+        // 改了el-border-color 刷新一下el-border
+        --el-border: var(--el-border-width) var(--el-border-style) var(--el-border-color);
+        // 左侧菜单栏背景|文字颜色
+        --left-menu-bg-color: #ffffff;
+        --el-menu-bg-color: var(--left-menu-bg-color);
+        --left-menu-text-color: #333333;
+        --el-menu-text-color: var(--left-menu-text-color);
+        // 左侧菜单栏子菜单背景颜色
+        --left-menu-sub: #ffffff;
+        // 左侧菜单栏hover背景|文字颜色
+        --left-menu-hover-bg-color: transparent;
+        --el-menu-hover-bg-color: var(--left-menu-hover-bg-color);
+        --left-menu-hover-text-color: #409eff;
+        // 左侧菜单栏active背景|文字颜色
+        --left-menu-active-bg-color: #ecf5ff;
+        --left-menu-active-text-color: #409eff;;
+        --el-menu-active-color: var(--left-menu-active-text-color);
+      }
+    }
+
+  }
+
+
+  // 布局 黑暗主题
+  .system-theme.system-theme-dark {
+
+    // 登录页
+    .login-wrapper {
+      --login-from-bg-color: transparent;
+      --login-from-border-color: #4c4d4f;
+    }
+    // 布局
+    .layout-wrapper {
+      // 背景色
+      --layout-wrapper-bg-color: #141414;
+      // 左侧菜单栏
+      .layout-left {
+        // 左侧菜单栏有边框颜色
+        --layout-left-border-color: #dcdfe6;
+        // 左侧菜单栏背景|文字颜色
+        --left-menu-bg-color: #141414;
+        --el-menu-bg-color: var(--left-menu-bg-color);
+        --left-menu-text-color: #BFCBD9;
+        --el-menu-text-color: var(--left-menu-text-color);
+        // 左侧菜单栏子菜单背景颜色
+        --left-menu-sub: #232323;
+        // 左侧菜单栏hover背景|文字颜色
+        --left-menu-hover-bg-color: #2c3e5e;
+        --el-menu-hover-bg-color: var(--left-menu-hover-bg-color);
+        --left-menu-hover-text-color: #BFCBD9;
+        // 左侧菜单栏active背景|文字颜色
+        --left-menu-active-bg-color: #2c3e5e;
+        --left-menu-active-text-color: #409eff;;
+        --el-menu-active-color: var(--left-menu-active-text-color);
+        // 顶部背景色
+        --top-header-bg-color: #141414;
+      }
+
+      & {
+        // --top-header-text-color: 'inherit';
+        // app-content-wrapper 背景色
+        --app-content-bg-color: #1d1e1f;
+
+
+        // 输入框 按钮等背景填充色
+        --el-fill-color-blank: #1d1e1f;
+        // label 等文字颜色
+        --el-text-color-regular: #CFD3DC;
+        --el-fill-color-light: #262727;
+        // 边框颜色
+        --el-border-color: #4c4d4f;
+        // 改了el-border-color 刷新一下el-border
+        --el-border: var(--el-border-width) var(--el-border-style) var(--el-border-color);
+        // 搜索条件边框颜色
+        --filter-border: var(--el-border-color);
+      }
+    }
+  }
+
+
+}

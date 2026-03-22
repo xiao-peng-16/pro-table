@@ -1,0 +1,128 @@
+import axios from 'axios'
+import type {
+  InternalAxiosRequestConfig,
+  AxiosResponse,
+  AxiosRequestConfig,
+  AxiosInstance,
+  AxiosRequestHeaders,
+  AxiosError
+} from 'axios'
+import { ElMessage } from 'element-plus'
+
+// 从环境变量读取接口前缀；未配置时回退到 /api
+const BASE_API = import.meta.env.VITE_APP_BASE_API || '/api'
+
+
+// Token key
+const TOKEN_KEY = 'Authorization'
+// 请求成功状态码
+const SUCCESS_CODE = 0
+
+/**
+ * Http 接口统一响应体
+ */
+export type HttpResult<T = any> = {
+  code: number
+  message: string
+  data: T extends any ? T : T & any
+}
+
+
+const axiosInstance: AxiosInstance = axios.create({
+  // 请求URL公共前缀（开发/生产环境可通过 .env.* 配置切换）
+  baseURL: BASE_API,
+  // 超时
+  timeout: 10000
+})
+
+// 请求默认Content-Type
+axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8'
+
+/**
+ * 创建请求
+ * @param method        请求方法
+ * @param url           接口当前
+ * @param config        axios配置
+ * @returns 
+ */
+const createRequest =  <T = any, P = any>(method: string, url: string, config: AxiosRequestConfig = {}): (req?: P) => Promise<HttpResult<T>> => {
+  const paramKey = ['post', 'put', 'patch'].includes(method) ? 'data' : 'params'
+  return (req?: P): Promise<HttpResult<T>> => {
+    const { headers, responseType } = config
+    return axiosInstance.request({
+      url: url,
+      method,
+      [paramKey]: req || {},
+      responseType: responseType,
+      headers: {
+        [TOKEN_KEY ?? 'Authorization']: getToken() ?? '',
+        ...headers
+      },
+      ...config,
+    })
+  } 
+}
+
+
+
+// 响应拦截器
+axiosInstance.interceptors.response.use((response: AxiosResponse) => {
+    if (response?.config?.responseType === 'blob') {
+      // 如果是文件流，直接过
+      return response
+    } else {
+      const code = response?.data?.code
+      if (code === SUCCESS_CODE) {
+        return response.data
+      } else {
+        const message = response?.data?.message ?? '请求失败，请稍后重试'
+        ElMessage.error(message)
+        if (code === 401) {
+          // const userStore = useUserStoreWithOut()
+          // userStore.logout()
+        }
+
+        return Promise.reject(new Error(message))
+      }
+    }
+  },
+  error => {
+    console.log('err' + error)
+    let { message } = error
+    if (message == "Network Error") {
+      message = "后端接口连接异常"
+    } else if (message.includes("timeout")) {
+      message = "系统接口请求超时"
+    } else if (message.includes("Request failed with status code")) {
+      message = "系统接口" + message.slice(-3) + "异常"
+    }
+    ElMessage({ message: message, type: 'error', duration: 5 * 1000 })
+    return Promise.reject(error)
+  }
+)
+
+
+// 获取Token
+export const getToken = () => {
+  return window.localStorage.getItem('token')
+}
+// 设置Token
+export const setToken = (token: string) => {
+  return window.localStorage.setItem('token', token)
+}
+
+export default {
+  get: <P = any, T = any>(url: string, config?: AxiosRequestConfig): (req?: P) => Promise<HttpResult<T>> => {
+    return createRequest<T, P>('get', url, config)
+  },
+  post: <P = any, T = any>(url: string, config?: AxiosRequestConfig): (req?: P) => Promise<HttpResult<T>> => {
+    return createRequest<T, P>('post', url, config)
+  },
+  delete: <P = any, T = any>(url: string, config?: AxiosRequestConfig): (req?: P) => Promise<HttpResult<T>> => {
+    return createRequest<T, P>('delete', url, config)
+  },
+  put: <P = any, T = any>(url: string, config?: AxiosRequestConfig): (req?: P) => Promise<HttpResult<T>> => {
+    return createRequest<T, P>('put', url, config)
+  },
+
+}

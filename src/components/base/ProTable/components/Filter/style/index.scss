@@ -1,0 +1,85 @@
+.filter-wrapper {
+  .filter-form {
+    position: relative;
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    margin-left: -12px;
+    &.flex-6 {
+      & > .filter-item {
+        flex: 0 0 calc((100% / 6) - 12px);
+      }
+    }
+    &.flex-5 {
+      & > .filter-item {
+        flex: 0 0 calc((100% / 5) - 12px);
+      }
+    }
+    &.flex-4 {
+      & > .filter-item {
+        flex: 0 0 calc((100% / 4) - 12px);
+      }
+    }
+    &.flex-3 {
+      & > .filter-item {
+        flex: 0 0 calc((100% / 3) - 12px);
+      }
+    }
+    .filter-item {
+      min-width: 200px;
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--el-border-color);
+      box-sizing: border-box;
+      margin-bottom: 11px !important;
+      margin-left: 12px;
+      padding: 1px 0px;
+      & .el-form-item__label {
+        height: max-content;
+        line-height:normal;
+        border-right: 1px solid var(--el-border-color);
+        padding: 0px 12px;
+      }
+
+      .el-date-editor,
+      .el-cascader,
+      .el-select__wrapper,
+      .el-input__wrapper,
+      .el-input,
+      .el-input-number {
+        width: 100%;
+        outline-color: none;
+        box-shadow: none;
+        &:hover {
+          box-shadow: none;
+          outline-color: none;
+        }
+        &.is-force {
+          outline-color: none;
+        }
+      }
+    }
+
+    .el-date-editor {     // 日期组件
+      box-sizing: border-box;
+      padding-right: 0 !important;
+      cursor: pointer;
+      .el-input__icon:first-of-type { // first-of-type 选择第一个icon，避免影响清除按钮的icon
+        display: none;  // 隐藏icon 减少内容width占用
+      }
+      .el-input__inner {
+        cursor: pointer;
+      }
+      .el-range-input {   // 日期范围class
+        cursor: pointer;
+        flex: 10;         // 增加时间内容展示width占比
+        max-width: 75px;  // 防止展示时分秒 width不够只能战术部分
+      }
+    }
+
+    .filter-item.filter-item-btn-wrapper{
+      border: none;
+    }
+  }
+}
+

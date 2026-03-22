@@ -1,0 +1,19 @@
+.p-pagination {
+  .el-pagination{
+    .el-pagination__sizes{
+      order: 1;
+      .el-select{
+        width: 110px;
+      }
+    }
+    .el-pagination__jump{
+      order: 2;
+    }
+  }
+  .el-pagination.is-background{
+    .btn-next, .btn-prev, .el-pager li:not(.is-active) {
+      background: #f8f8fa;
+      border: 1px solid #dfe2e6;
+    }
+  }
+}

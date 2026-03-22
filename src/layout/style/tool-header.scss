@@ -1,0 +1,35 @@
+.tool-header-wrapper {
+  width: 100%;
+  height: var(--top-tool-height);
+  box-sizing: border-box;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .tool-header__left {
+    display: flex;
+    align-items: center;
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2;
+      .el-breadcrumb__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        span {
+          color: #A8ABB2;
+        }
+      }
+    }
+  }
+  .tool-header__right {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    & > * {
+      margin-left: 15px;
+    }
+  }
+}

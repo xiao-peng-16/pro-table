@@ -1,0 +1,11 @@
+.tags-view-wrapper {
+  width: 100%;
+  height: var(--tags-view-height);
+  box-sizing: border-box;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--el-border-color);
+  border-bottom: 1px solid var(--el-border-color);
+}

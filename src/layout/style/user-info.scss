@@ -1,0 +1,13 @@
+.userInfo {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  img {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+  }
+  span {
+    padding-left: 5px;
+  }
+}

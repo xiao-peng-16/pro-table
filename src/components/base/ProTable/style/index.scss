@@ -1,0 +1,127 @@
+// ProTable 根包装容器（对应 ProTable.vue 模板最外层 div.pro-table__wrapper）。
+.pro-table__wrapper {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  // 让 Filter 与 Table 容器按纵向布局分配空间：
+  // 当调用方给 ProTable 本身设置固定高度时，Table 容器将占用“剩余高度”，避免被直接裁剪。
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// ProTable 主体容器（对应 Teleport 内的 div.pro-table__container）。
+.pro-table__container {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  // 关键：不再强制 100% 高度，改为在 wrapper 内吃掉剩余空间。
+  // 这样 <ProTable style="height: 300px" /> 时，会在扣除 Filter 区域后给 Table 可用高度。
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  // 从顶部中心进行缩放，视觉上更像从当前区域自然展开。
+  transform-origin: top center;
+  // 全屏切换的统一过渡参数（进入/退出都会生效）。
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease, background-color 0.22s ease;
+}
+
+// ProTable 全屏状态容器（同一元素在全屏时追加的修饰符类）。
+.pro-table__container--full-screen {
+  // 全屏状态：固定定位覆盖视口。
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 2000;
+  margin-top: 0;
+  padding: 15px;
+  box-sizing: border-box;
+  background-color: var(--default-box-color, white);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+  // 进入全屏时增加轻量入场动画，避免“硬切”。
+  animation: pro-table-fullscreen-enter 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+// 全屏进入动画：轻微上移+缩放，70% 处几乎到位，最终稳定落点。
+@keyframes pro-table-fullscreen-enter {
+  from {
+    opacity: 0.92;
+    transform: translateY(6px) scale(0.985);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(0) scale(1.002);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// 遵循系统“减少动态效果”设置，关闭动画与过渡。
+@media (prefers-reduced-motion: reduce) {
+  .pro-table__container {
+    transition: none;
+  }
+
+  .pro-table__container--full-screen {
+    animation: none;
+  }
+}
+
+// ProTable 顶部操作区（对应容器内的 .table-top__container 元素）。
+.pro-table__container .table-top__container {
+  position: relative;
+  display: flex;
+  padding: 10px 0;
+}
+
+// ProTable 顶部操作区内插槽（对应容器内的 .table-top__container 元素）。
+.pro-table__container .table-top__container .table-top-slot {
+  min-height: 10px; // 防止没有内容
+}
+
+// ProTable 顶部右侧设置按钮区（全屏/自定义入口容器）。
+.pro-table__container .table-top__container .table-top-setting {
+  position: absolute;
+  right: 0;
+  bottom: 5px;
+  z-index: 100;
+}
+
+// ProTable 顶部单个设置按钮元素。
+.pro-table__container .table-top__container .table-top-setting .table-top-setting-item {
+  margin-left: 6px;
+}
+
+
+// ProTable 底部区域（包含底部插槽与分页组件）。
+.pro-table__container .bottom-content {
+  padding-top: 20px;
+  display: flex;
+}
+
+// ProTable 底部左侧插槽区域。
+.pro-table__container .bottom-content .bottom-before {
+  flex-grow: 2;
+  flex-shrink: 2;
+  margin-right: 40px;
+}
+
+// Table 组件外层包裹元素（限制宽度，避免内容撑开容器）。
+.pro-table__container .table-wrapper {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+// 全屏时锁定 body 滚动，防止底层页面滚动穿透。
+body.pro-table-fullscreen-lock {
+  overflow: hidden;
+}

@@ -20,11 +20,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import { ProTable, FilterItem, TableColumnItem, PageResponse } from '@/components/base/ProTable'
 import { deptEnum, roleEnum, statusEnum, genderEnum, sourceEnum, queryMockUsers } from './table-test.mock.js'
 
 // 搜索条件
-const filters: FilterItem[] = [
+const filters = computed<FilterItem[]>(() => [
   {
     label: '账号',
     prop: 'username',
@@ -99,11 +100,11 @@ const filters: FilterItem[] = [
     label: '更新人',
     prop: 'updater',
   },
-]
+])
 
 
 // 列表字段
-const columns: TableColumnItem[] = [
+const columns = computed<TableColumnItem[]>(() => [
   {
     type: 'selection',
     width: 50,
@@ -220,7 +221,7 @@ const columns: TableColumnItem[] = [
     fixed: 'right',
     width: 180,
   },
-]
+])
 
 // 获取数据方法
 const getData = async (param): Promise<PageResponse<any>> => {

@@ -91,6 +91,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import { ProTable, FilterItem, TableColumnItem, PageResponse } from '@/components/base/ProTable'
 import { queryMockUsers } from './table-test.mock.js'
 
@@ -101,7 +102,7 @@ const genderEnum = [
 ]
 
 // 搜索条件
-const filters: FilterItem[] = [
+const filters = computed<FilterItem[]>(() => [
   {
     label: '姓名',
     prop: 'nickName',
@@ -119,10 +120,10 @@ const filters: FilterItem[] = [
     prop: ['createTimeStart', 'createTimeEnd'],   // 时间范围搜索 [开始时间字段， 结束时间字段] （详情参考 src\components\base\ProTable\types\index.ts）
     defaultShortcut: 'currentYear',               
   },
-]
+])
 
 // 列表字段
-const columns: TableColumnItem[] = [
+const columns = computed<TableColumnItem[]>(() => [
   {
     type: 'selection',
     width: 50,
@@ -144,7 +145,7 @@ const columns: TableColumnItem[] = [
     fixed: 'right',         // 右对齐 （详情参考 src\components\base\ProTable\types\index.ts）
     width: 180,
   },
-]
+])
 
 // 获取数据方法
 const getData = async (param): Promise<PageResponse<any>> => {

@@ -67,16 +67,17 @@
 ```vue
 <template>
   <ProTable
-    row-key="userId"
     :filters="filters"
     :columns="columns"
     :get-table-data="getData"
-    custom-id="user-table"
+    custom-id="pro-table-test1"
   >
-    <template #table-top>
-      <el-button type="primary">新增</el-button>
-    </template>
+      <!-- 表格顶部按钮插槽 -->
+      <template #table-top>
+        <el-button type="primary">新增</el-button>
+      </template>
 
+    <!-- 按钮区插槽  下面 slot: 'column_operate'  -->
     <template #column_operate="{ row }">
       <el-button link type="primary">查看</el-button>
       <el-button link type="primary">编辑</el-button>
@@ -86,30 +87,71 @@
 </template>
 
 <script setup lang="ts">
-import { ProTable, type FilterItem, type TableColumnItem, type PageResponse } from '@/components/base/ProTable'
+import { ProTable, FilterItem, TableColumnItem, PageResponse } from '@/components/base/ProTable'
+import { queryMockUsers } from './table-test.mock.js'
 
+// 枚举值用于 搜索条件[下拉框] 和 列表字段映射
+const genderEnum = [
+  { value: 'M', label: '男' },
+  { value: 'F', label: '女' },
+]
+
+// 搜索条件
 const filters: FilterItem[] = [
-  { label: '账号', prop: 'username' },
-  { type: 'select', label: '状态', prop: 'status', enumItems: [
-    { label: '启用', value: 1 },
-    { label: '禁用', value: 0 },
-  ] },
-  { type: 'datetimerange', label: '创建时间', prop: ['createTimeStart', 'createTimeEnd'] },
+  {
+    label: '姓名',
+    prop: 'nickName',
+  },
+  {
+    type: 'select',           // 类型：下拉框
+    label: '性别',            // 标题
+    prop: 'gender',           // 字段名
+    enumItems: genderEnum,    // 枚举下拉框
+    value: 'M'                // 默认初始值
+  },
+  {
+    type: 'datetimerange',    // 类型：时间范围选择
+    label: '创建时间',        // 标题
+    prop: ['createTimeStart', 'createTimeEnd'],   // 时间范围搜索 [开始时间字段， 结束时间字段]
+    defaultShortcut: 'currentYear',               
+  },
 ]
 
+
+// 列表字段
 const columns: TableColumnItem[] = [
-  { type: 'selection', width: 50 },
-  { type: 'index', label: '序号', width: 70 },
-  { label: '账号', prop: 'username', minWidth: 140, fixed: 'left' },
-  { label: '状态', prop: 'status', width: 100 },
-  { label: '操作', slot: 'column_operate', fixed: 'right', width: 180 },
+  {
+    type: 'selection',
+    width: 50,
+  },
+  {
+    label: '姓名',
+    prop: 'nickName',
+    minWidth: 120,
+  },
+  {
+    label: '性别',
+    prop: 'gender',
+    enumItems: genderEnum,    // 枚举映射 将后端值映射为枚举对应中文描述
+    width: 90,
+  },
+  {
+    label: '操作',
+    slot: 'column_operate', // 插槽
+    fixed: 'right',
+    width: 180,
+  },
 ]
 
-const getData = async (params): Promise<PageResponse<any>> => {
-  return {
-    root: [],
-    totalRows: 0,
-  }
+// 获取数据方法
+const getData = async (param): Promise<PageResponse<any>> => {
+  // 模拟调用后端接口
+  const result = queryMockUsers(param)
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(result)
+    }, 300)
+  })
 }
 </script>
 ```

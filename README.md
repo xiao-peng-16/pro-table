@@ -1,6 +1,6 @@
-[案例截图](#列表字段设置弹窗)
-[代码案例](#基础用法)
-[详细文档](./src/components/base/ProTable/types/index.ts)
+ [案例截图](#列表字段设置弹窗) 
+ [代码案例](#基础用法) 
+ [详细文档](./src/components/base/ProTable/types/index.ts) 
 
 ## ProTable 使用说明
 

@@ -1,3 +1,6 @@
+[案例截图](#### 2.3 列表字段设置弹窗)
+[代码案例](### 3. 基础用法)
+[详细文档](./src/components/base/ProTable/types/index.ts)
 
 ## ProTable 使用说明
 
@@ -61,7 +64,7 @@
 这也是 `customId` 最直接的使用价值之一：不同页面可以保存各自独立的字段配置，不会互相污染。
 
 ### 3. 基础用法
-
+[详细文档](./src/components/base/ProTable/types/index.ts)
 仓库里现有的真实接入示例在 `src/views/table-test.vue`，最小使用方式如下：
 
 ```vue
@@ -103,20 +106,19 @@ const filters: FilterItem[] = [
     prop: 'nickName',
   },
   {
-    type: 'select',           // 类型：下拉框
-    label: '性别',            // 标题
-    prop: 'gender',           // 字段名
-    enumItems: genderEnum,    // 枚举下拉框
-    value: 'M'                // 默认初始值
+    type: 'select',           // 类型：下拉框   （详情参考 src\components\base\ProTable\types\index.ts）
+    label: '性别',            // 标题           （详情参考 src\components\base\ProTable\types\index.ts）
+    prop: 'gender',           // 字段名         （详情参考 src\components\base\ProTable\types\index.ts）
+    enumItems: genderEnum,    // 枚举下拉框     （详情参考 src\components\base\ProTable\types\index.ts）
+    value: 'M'                // 默认初始值     （详情参考 src\components\base\ProTable\types\index.ts）
   },
   {
     type: 'datetimerange',    // 类型：时间范围选择
     label: '创建时间',        // 标题
-    prop: ['createTimeStart', 'createTimeEnd'],   // 时间范围搜索 [开始时间字段， 结束时间字段]
+    prop: ['createTimeStart', 'createTimeEnd'],   // 时间范围搜索 [开始时间字段， 结束时间字段] （详情参考 src\components\base\ProTable\types\index.ts）
     defaultShortcut: 'currentYear',               
   },
 ]
-
 
 // 列表字段
 const columns: TableColumnItem[] = [
@@ -137,8 +139,8 @@ const columns: TableColumnItem[] = [
   },
   {
     label: '操作',
-    slot: 'column_operate', // 插槽
-    fixed: 'right',
+    slot: 'column_operate', // 插槽   （详情参考 src\components\base\ProTable\types\index.ts）
+    fixed: 'right',         // 右对齐 （详情参考 src\components\base\ProTable\types\index.ts）
     width: 180,
   },
 ]
@@ -186,8 +188,10 @@ const getData = async (params): Promise<PageResponse<UserItem>> => {
 }
 ```
 
-### 5. Props
+### 5. 文档说明
+[详细文档](./src/components/base/ProTable/types/index.ts)
 
+简易文档：
 | Prop | 类型 | 必填 | 默认值 | 说明 |
 | --- | --- | --- | --- | --- |
 | `filters` | `FilterItem[]` | 否 | `[]` | 查询区域配置。 |

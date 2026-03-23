@@ -103,7 +103,7 @@
   const emit = defineEmits<{
     // [全局]自定义配置完成
     (e: 'update:custom-global')
-    // [搜索添加字段]自定义配置完成
+    // [搜索条件字段]自定义配置完成
     (e: 'update:custom-filter', newFilters: FilterItem[])
     // 取消
     (e: 'cancel')

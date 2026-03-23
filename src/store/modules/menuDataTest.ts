@@ -9,6 +9,10 @@ import { menuRouterItem } from '@/types/menuRouterItem'
         title: '列表',
         path: '/test',
       },
+      {
+        title: '列表-Filter复用',
+        path: '/test2',
+      },
     ]
   },
   {

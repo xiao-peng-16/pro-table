@@ -1,12 +1,12 @@
 <template>
   <div ref="ProTableWrapperRef" class="pro-table__wrapper">
     <Filter
-      v-if="filters && filters.length > 0"
+      v-show="filters && filters.length > 0"
       ref="FilterRef"
-      :filters="customFilters"
+      :filters="filters"
       :custom-id="customId"
       :loading="loading"
-      :pro-table-global-config="proTableGlobalConfig"
+      :is-show-custom-view="false"
       @query="onFilterQuery"
       @filter-reset="emit('filter-reset')"
       @open-filter-custom-view="openFilterCustomView"
@@ -19,7 +19,7 @@
 
     <!-- 全屏时将表格容器挂载到 body，避免受父级布局约束；非全屏时仍在原位置渲染。 -->
     <Teleport to="body" :disabled="!isFullScreen">
-      <div ref="tableBoxRef" class="pro-table__container" :class="{ 'pro-table__container--full-screen': isFullScreen }">
+      <div ref="tableContainerRef" class="pro-table__container" :class="{ 'pro-table__container--full-screen': isFullScreen }">
         <!-- Table顶部 -->
         <div class="table-top__container">
           <!-- Table顶部按钮区插槽 -->
@@ -83,7 +83,7 @@
     </Teleport>
 
 
-    <!-- Table列字段自定义设置组件 -->
+    <!-- Table/Filter字段自定义设置组件 -->
     <CustomView
       ref="ProTableCustomViewRef"
       :custom-id="customStoreId"
@@ -93,6 +93,10 @@
       @update:custom-filter="onUpdateCustomFilter"
       @update:custom-columns="onUpdateCustomColumns"
     >
+      <!-- Filter 插槽透传 -->
+      <template v-for="itemSlot in filterSlots" :key="itemSlot" v-slot:[itemSlot]="temp">
+        <slot :name="itemSlot" v-bind="temp"></slot>
+      </template>
       <!-- TableColumn表头插槽透传 -->
       <template v-for="itemSlot in getTableColumnHeaderSlot(columns)" :key="itemSlot" v-slot:[itemSlot]="temp">
         <slot :name="itemSlot" v-bind="temp"></slot>
@@ -173,7 +177,7 @@
   // 表格是否全屏
   const isFullScreen = ref(false)
   const ProTableWrapperRef = ref<HTMLElement>()
-  const tableBoxRef = ref<HTMLElement>()
+  const tableContainerRef = ref<HTMLElement>()
   const tableBottomContentRef = ref<HTMLElement>()
 
 
@@ -243,41 +247,21 @@
   // --------------------   ProTable全局配置-自定义设置   ----------------------------------------
   // ProTable全局配置
   const proTableGlobalConfig = ref<ProTableGlobalConfig>(loadGlobalConfig())
-  // 事件 [全局配置] 自定义配置完成
+  // 事件 [全局配置] 自定义配置完成 
   const onUpdateCustomGlobal = () =>{
     proTableGlobalConfig.value = loadGlobalConfig()
+    // 通知[Filter]全局配置已修改
+    FilterRef.value.onUpdateCustomGlobal()
   }
-
 
 
   // --------------------   Filter列字段-自定义设置   ----------------------------------------
 
-  // [最终渲染列表字段] 用户自定义设置列表字段（字段顺序+ fixed + visible）
-  const customFilters = ref<FilterItem[]>([])
-  // 外部 Filters 发生变化后，重新生成内部可渲染列。
-  watch(
-    () => props.filters,
-    (newFilters) => {
-      // 代码配置搜索字段信息 和 浏览器保存用户自定义配置(列顺序+列字段属性[visible]) 进行合并
-      customFilters.value = resolveFilterItems(newFilters || [], {
-        storageId: customStoreId.value,
-        usePersisted: true,
-      })
-    },
-    {
-      // 深度监听：支持外部在原数组引用不变的情况下，直接修改列内部字段。
-      // 例如：columns[i].visible = false / columns[i].label = '新标题'
-      deep: true,
-      // 立即执行：组件初始化时也会进行一次列处理，替代原先的手动初始化赋值。
-      immediate: true,
-    }
-  )
-  
-  // [搜索添加字段]自定义配置完成
-  const onUpdateCustomFilter = (newFilters: FilterItem[]) =>{
-    customFilters.value = newFilters
+  // [搜索条件字段]自定义配置完成
+  // 直接调用[Filter]内部[onUpdateCustomFilter] [Filter]为了单独使用，内部也引入了[CustomView] 
+  const onUpdateCustomFilter = (customFilters: FilterItem[]) =>{
+      FilterRef.value.onUpdateCustomFilter(customFilters)
   }
-
 
 
   // --------------------   Table列字段-自定义设置   ----------------------------------------
@@ -457,7 +441,7 @@
     tableHeightVersion.value
 
     const tableRootEl = TableRef.value?.getTableRootEl?.()
-    const tableContainerEl = tableBoxRef.value
+    const tableContainerEl = tableContainerRef.value
     if (!tableRootEl || !tableContainerEl) {
       // 首帧尚未挂载完成时使用透传值兜底
       return attrMaxHeight.value
@@ -535,15 +519,15 @@
     return Math.max(nextHeight, TABLE_MIN_MAX_HEIGHT)
   })
   // 监听容器尺寸变化，窗口缩放、侧边栏伸缩等场景都触发表格重排
-  const resizeObserver = new ResizeObserver(() => {
-    scheduleHeightAndLayout()
-  })
+  const filterResizeObserver = new ResizeObserver(() => scheduleHeightAndLayout())
+  const tableContainerResizeObserver = new ResizeObserver(() => scheduleHeightAndLayout())
   const onWindowResize = () => {
     scheduleHeightAndLayout()
   }
   onMounted(() => {
-    if (tableBoxRef.value) {
-      resizeObserver.observe(tableBoxRef.value)
+    if (tableContainerRef.value) {
+      filterResizeObserver.observe(FilterRef.value.$el)
+      tableContainerResizeObserver.observe(tableContainerRef.value)
     }
     // 全局窗口变化（浏览器缩放/布局变化）时重算，确保内部滚动优先于页面滚动
     window.addEventListener('resize', onWindowResize)
@@ -554,7 +538,8 @@
   })
   // 组件卸载前断开监听，避免 ResizeObserver 持有引用导致内存泄漏
   onBeforeUnmount(() => {
-    resizeObserver.disconnect()
+    filterResizeObserver.disconnect()
+    tableContainerResizeObserver.disconnect()
     window.removeEventListener('resize', onWindowResize)
   })
   
@@ -565,6 +550,8 @@
   const expose: any & ElTableFns = {
     // 获取查询参数
     getQueryParam: getQueryParam,
+    // 搜索条件参数变更触发查询事件
+    onFilterQuery: onFilterQuery,
     // 刷新数据
     refreshData: queryData,
     // element-plus table 方法

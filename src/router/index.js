@@ -7,15 +7,24 @@ const routers = [
         name: 'Root',
         redirect: '/test',
         children: [
-            {
+              {
                 path: '/test',
                 component: () => import('@/views/table-test.vue'),
                 name: 'test',
                 meta: {
-                    hidden: true,
-                    canTo: true
+                  hidden: true,
+                  canTo: true
                 }
-            },
+              },
+              {
+                path: '/test2',
+                component: () => import('@/views/table-test2.vue'),
+                name: 'test2',
+                meta: {
+                  hidden: true,
+                  canTo: true
+                }
+              },
         ]
     },
 ];

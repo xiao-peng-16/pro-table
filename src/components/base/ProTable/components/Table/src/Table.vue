@@ -59,7 +59,7 @@
       // ProTable全局配置
       proTableGlobalConfig: ProTableGlobalConfig
       // vue-draggable-plus 组件参数与配置
-      drag: VueDraggableProps
+      drag?: VueDraggableProps
     } & /* @vue-ignore */ ElTableProps>(),
     {
       columns: () => [],

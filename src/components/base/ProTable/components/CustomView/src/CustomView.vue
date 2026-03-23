@@ -36,11 +36,15 @@
         @update:custom-global="onUpdateCustomGlobal"
         @cancel="cancel"
       >
+        <!-- Filter 插槽透传 -->
+        <template v-for="itemSlot in getProTableFilterSlots(sourceFilters)" :key="itemSlot" v-slot:[itemSlot]="temp">
+          <slot :name="itemSlot" v-bind="temp"></slot>
+        </template>
       </FilterCustomView>
     </el-tab-pane>
 
     <!-- [列表字段] 设置 -->
-    <el-tab-pane label="列表字段" name="table_config">
+    <el-tab-pane label="列表字段" name="table_config"  v-if="sourceColumns && sourceColumns.length > 0">
         <!-- Table列字段自定义设置组件 -->
         <TableCustomView
           v-if="tabs_active === 'table_config'"
@@ -68,7 +72,7 @@
   import TableCustomView from './TableCustomView.vue'
   import GlobalCustomView from './GlobalCustomView.vue'
   import { FilterItem, TableColumnItem } from "@/components/base/ProTable"
-  import { getTableColumnHeaderSlot } from '@/components/base/ProTable/utils'
+  import { getProTableFilterSlots, getTableColumnHeaderSlot } from '@/components/base/ProTable/utils'
   const slots  = useSlots()
   const attrs = useAttrs()
   const props = withDefaults(
@@ -76,9 +80,9 @@
       // 表格唯一标识（由于ProTable获取后传入）
       customId?: string
       // 搜索条件字段列表
-      sourceFilters: FilterItem[],
+      sourceFilters?: FilterItem[],
       // 列表字段列表
-      sourceColumns: TableColumnItem[]
+      sourceColumns?: TableColumnItem[]
     }>(),
     {
       customId: '',
@@ -90,7 +94,7 @@
   const emit = defineEmits<{
     // [全局配置]自定义配置完成
     (e: 'update:custom-global')
-    // [搜索添加字段]自定义配置完成
+    // [搜索条件字段]自定义配置完成
     (e: 'update:custom-filter', customConfig: FilterItem[])
     // [列表字段]自定义配置完成
     (e: 'update:custom-columns', newColumns: TableColumnItem[])
@@ -127,7 +131,7 @@
     dialogVisible.value = false
   }
 
-  // 事件 [搜索添加字段] 自定义配置完成
+  // 事件 [搜索条件字段] 自定义配置完成
   const onUpdateCustomFilter = (newFilters: FilterItem[]) =>{
     emit('update:custom-filter', newFilters)
     dialogVisible.value = false

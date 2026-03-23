@@ -62,13 +62,28 @@
           </el-button>
         </el-tooltip>
         <!-- [自定义设置]按钮 -->
-        <el-tooltip v-if="customId && filterCustom" placement="bottom" effect="dark" content="自定义设置">
+        <el-tooltip placement="bottom" effect="dark" content="自定义设置">
           <el-button @click="openFilterCustomView" style="padding: 0px;min-width: 35px;">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><g fill="none" fill-rule="evenodd"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M18 4a1 1 0 1 0-2 0v1H4a1 1 0 0 0 0 2h12v1a1 1 0 1 0 2 0V7h2a1 1 0 1 0 0-2h-2zM4 11a1 1 0 1 0 0 2h2v1a1 1 0 1 0 2 0v-1h12a1 1 0 1 0 0-2H8v-1a1 1 0 0 0-2 0v1zm-1 7a1 1 0 0 1 1-1h12v-1a1 1 0 1 1 2 0v1h2a1 1 0 1 1 0 2h-2v1a1 1 0 1 1-2 0v-1H4a1 1 0 0 1-1-1"/></g></svg>
           </el-button>
         </el-tooltip>
       </div>
     </el-form>
+
+    <!-- Filter字段自定义设置组件 -->
+    <CustomView
+      v-if="isShowCustomView"
+      ref="ProTableCustomViewRef"
+      :custom-id="customStoreId"
+      :source-filters="filters"
+      @update:custom-global="onUpdateCustomGlobal"
+      @update:custom-filter="onUpdateCustomFilter"
+    >
+      <!-- TableColumn表头插槽透传 -->
+      <template v-for="itemSlot in filterSlots" :key="itemSlot" v-slot:[itemSlot]="temp">
+        <slot :name="itemSlot" v-bind="temp"></slot>
+      </template>
+    </CustomView>
 
   </div>
 </template>
@@ -77,11 +92,14 @@
 <script setup lang="ts" name="Filter">
   import '../style/index.scss'
   import { ref, computed, watch, useAttrs, onMounted, onBeforeUnmount } from "vue";
+  import { useRoute } from 'vue-router'
   import { ElForm, ElInput, ElInputNumber, ElSelect, ElCascader, ElDatePicker, ElButton, ElTooltip } from "element-plus";
-  import { FilterCustomView, FilterItem, ProTableGlobalConfig, getInitFilterForm, getFilterParam, getFormItemProp, dateTypes, dateRangeTypes } from '@/components/base/ProTable'
-  import { getShortcuts } from '@/components/base/ProTable/utils'
-  import { cloneDeep } from 'lodash'
+  import { CustomView, FilterItem, ProTableGlobalConfig, getInitFilterForm, getFilterParam, getFormItemProp, dateTypes, dateRangeTypes } from '@/components/base/ProTable'
+  import { getProTableFilterSlots, getShortcuts } from '@/components/base/ProTable/utils'
+  import { resolveFilterItems } from '@/components/base/ProTable/components/CustomView/utils/useFilterColumnConfig'
+  import { loadGlobalConfig } from '@/components/base/ProTable/components/CustomView/utils/useGlobalConfig'
   import dayjs from 'dayjs'
+  const route = useRoute()
   const attrs = useAttrs()
   const props = withDefaults(
     defineProps<{
@@ -89,17 +107,16 @@
       filters?: FilterItem[],
       // 自定义配置的id 区别每个custom
       customId: string,
-      // 是否开启搜索条件设置工具
-      filterCustom?: boolean
       // 加载状态
       loading?: boolean
-      // ProTable全局配置
-      proTableGlobalConfig: ProTableGlobalConfig
+      // 是否加载自定义配置组件[CustomView] 默认开启， [ProTable]调用Filter设置False 由[ProTable]自己加载完整[CustomView]
+      // 既保证[ProTable]使用正常  同时[Filter]可以脱离[ProTable]正常使用（可以一个[Filter]搜索条件同时控制多个列表）
+      isShowCustomView?: boolean
     }>(),
     {
       filters: () => [],
-      filterCustom: true,
       loading: false,
+      isShowCustomView: true,
     }
   )
   const emit = defineEmits<{
@@ -110,16 +127,28 @@
     // 打开[搜索条件]自定义设置
     (e: 'open-filter-custom-view'),
   }>()
+  
 
   const FormRef = ref<InstanceType<typeof ElForm>>()
-  const FilterCustomViewRef = ref<InstanceType<typeof FilterCustomView>>()
+  const ProTableCustomViewRef = ref<InstanceType<typeof CustomView>>()
+  const filterSlots: string[] = getProTableFilterSlots(props.filters)
+
+  // 自定义设置id customId未设置时使用route地址兜底, 这样同一路由下刷新仍可命中缓存，不同页面互不污染
+  const customStoreId = computed(() => String(props.customId || route.path || ''))
+
+  // ProTable全局配置
+  const proTableGlobalConfig = ref<ProTableGlobalConfig>(loadGlobalConfig())
+  // 事件 [全局配置] 自定义配置完成
+  const onUpdateCustomGlobal = () =>{
+    proTableGlobalConfig.value = loadGlobalConfig()
+  }
 
   // [全局配置] 展示行数
-  const filterShowRow = computed(() => props.proTableGlobalConfig?.filterShowRow ?? 1)
+  const filterShowRow = computed(() => proTableGlobalConfig.value?.filterShowRow ?? 1)
   // 是否展开展示所有搜索条件
   const isShowAll = ref<boolean>(false)
   watch(
-    () => props.proTableGlobalConfig?.filterIsShowAll ?? false,
+    () => proTableGlobalConfig.value?.filterIsShowAll ?? false,
     (filterIsShowAll) => {
       isShowAll.value = filterIsShowAll
     },
@@ -295,11 +324,10 @@
   }
 
 
-  // 处理Filter
+  // 处理Filter 并设置[handleFilters.value]
   const handleFilter = (list: FilterItem[]) => {
-    const newList = cloneDeep(list)
     // 递归TableColumn处理
-    newList.forEach(item => {
+    list.forEach(item => {
       // 校验
       checkHandle(item)
       // 公共处理
@@ -307,7 +335,7 @@
       // 根据类型进行特殊处理 无对应类型使用默认处理器
       item.type && typeHandles[item.type] ? typeHandles[item.type](item) : false
     })
-    return newList
+    handleFilters.value = list
   }
 
 
@@ -346,19 +374,35 @@
   }
 
 
-  // 初始化
-  const init = () => {
-    handleFilters.value = handleFilter(props.filters)
-  }
-  init()
 
+
+  // 外部 Filters 发生变化后，重新生成内部可渲染列。
   watch(
     () => props.filters,
-    () => {
-      handleFilters.value = handleFilter(props.filters)
+    (newFilters) => {
+      // [最终渲染列表字段] 用户自定义设置搜索条件字段（字段顺序 + visible）
+      // 代码配置搜索字段信息 和 浏览器保存用户自定义配置(列顺序+列字段属性[visible]) 进行合并
+      const customFilters = resolveFilterItems(newFilters || [], {
+        storageId: customStoreId.value,
+        usePersisted: true,
+      })
+      handleFilter(customFilters)
     },
-    { deep: true }
+    {
+      // 深度监听：支持外部在原数组引用不变的情况下，直接修改列内部字段。
+      // 例如：columns[i].visible = false / columns[i].label = '新标题'
+      deep: true,
+      // 立即执行：组件初始化时也会进行一次列处理，替代原先的手动初始化赋值。
+      immediate: true,
+    }
   )
+
+  
+  // [搜索条件字段]自定义配置完成
+  const onUpdateCustomFilter = (customFilters: FilterItem[]) =>{
+    handleFilter(customFilters)
+  }
+
 
   // 获取查询参数
   const getQueryParam = () => {
@@ -381,16 +425,24 @@
     isShowAll.value = !isShowAll.value
   }
 
-  // 打开Filter搜索条件自定义设置组件
+  // [Filter操作-打开自定义设置] 打开Table列字段自定义设置组件
   const openFilterCustomView = () => {
-    emit('open-filter-custom-view')
+    // 是否加载自定义配置组件[CustomView] 默认开启， [ProTable]调用Filter设置False 由[ProTable]自己加载完整[CustomView]
+    if (props.isShowCustomView) {
+      ProTableCustomViewRef.value.openDialog('filter_config')
+    } else {
+      emit('open-filter-custom-view')
+    }
   }
-
 
   // 导出方法
   const expose = {
     // 获取Filter搜索条件查询参数
-    getQueryParam: getQueryParam
+    getQueryParam: getQueryParam,
+    // [全局配置] 自定义配置完成
+    onUpdateCustomGlobal: onUpdateCustomGlobal,
+    // [搜索条件字段]自定义配置完成
+    onUpdateCustomFilter: onUpdateCustomFilter
   }
 
   defineExpose(expose)

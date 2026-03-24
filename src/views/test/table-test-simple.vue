@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { ProTable, FilterItem, TableColumnItem, PageResponse } from '@/components/base/ProTable'
-import { queryMockUsers } from './table-test.mock.js'
+import { queryMockUsers, deptEnum } from './table-test.mock.js'
 
 // 枚举值用于 搜索条件[下拉框] 和 列表字段映射
 const genderEnum = [
@@ -42,6 +42,12 @@ const filters = computed<FilterItem[]>(() => [
     prop: 'gender',           // 字段名         （详情参考 src\components\base\ProTable\types\index.ts）
     enumItems: genderEnum,    // 枚举下拉框     （详情参考 src\components\base\ProTable\types\index.ts）
     value: 'M'                // 默认初始值     （详情参考 src\components\base\ProTable\types\index.ts）
+  },
+  {
+    type: 'cascader',         // 类型：级联选择  （详情参考 src\components\base\ProTable\types\index.ts）
+    label: '部门',
+    prop: 'deptId',
+    enumItems: deptEnum,
   },
   {
     type: 'datetimerange',    // 类型：时间范围选择

@@ -109,7 +109,7 @@ export const getFormItemProp = (item:FilterItem) => {
   if (typeof item.prop === 'string') {
     return item.prop
   } else if (Array.isArray(item.prop)) {
-    return item.prop[0]
+    return item.prop?.join('_')
   }
 }
 

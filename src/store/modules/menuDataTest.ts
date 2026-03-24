@@ -10,24 +10,15 @@ import { menuRouterItem } from '@/types/menuRouterItem'
         path: '/test',
       },
       {
-        title: '列表-Filter复用',
+        title: '复杂搜索',
         path: '/test2',
       },
-    ]
-  },
-  {
-    title: '系统管理',
-    icon: 'ep:menu',
-    children: [
       {
-        title: '菜单管理',
-        path: '/system/menu',
-      },
-      {
-        title: '资源管理',
-        path: '/system/permission',
+        title: '多表格',
+        path: '/test3',
       },
     ]
   },
+
 
 ]

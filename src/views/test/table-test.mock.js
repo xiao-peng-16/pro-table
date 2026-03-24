@@ -1,9 +1,53 @@
 export const deptEnum = [
-  { value: 1, label: '研发部' },
-  { value: 2, label: '产品部' },
-  { value: 3, label: '测试部' },
-  { value: 4, label: '运营部' },
-  { value: 5, label: '财务部' },
+  {
+    value: 1,
+    label: '研发部',
+    children: [
+      {
+        value: 101,
+        label: '前端组',
+        children: [
+          { value: 1011, label: 'PC前端小组' },
+          { value: 1012, label: '移动端小组' },
+        ],
+      },
+      { value: 102, label: '后端组' },
+      { value: 103, label: '基础架构组' },
+    ],
+  },
+  {
+    value: 2,
+    label: '产品部',
+    children: [
+      { value: 201, label: '平台产品组' },
+      { value: 202, label: '增长产品组' },
+      { value: 203, label: '商业化产品组' },
+    ],
+  },
+  {
+    value: 3,
+    label: '测试部',
+    children: [
+      { value: 301, label: '功能测试组' },
+      { value: 302, label: '自动化测试组' },
+    ],
+  },
+  {
+    value: 4,
+    label: '运营部',
+    children: [
+      { value: 401, label: '用户运营组' },
+      { value: 402, label: '活动运营组' },
+    ],
+  },
+  {
+    value: 5,
+    label: '财务部',
+    children: [
+      { value: 501, label: '核算组' },
+      { value: 502, label: '预算组' },
+    ],
+  },
 ]
 
 export const roleEnum = [
@@ -30,10 +74,29 @@ export const sourceEnum = [
 
 const currentYear = new Date().getFullYear()
 
+const collectLeafDeptEnum = (deptList, labelPaths = []) => {
+  return deptList.flatMap(dept => {
+    const currentLabelPaths = [...labelPaths, dept.label]
+    if (Array.isArray(dept.children) && dept.children.length > 0) {
+      return collectLeafDeptEnum(dept.children, currentLabelPaths)
+    }
+    return [
+      {
+        value: dept.value,
+        label: currentLabelPaths.join(' / '),
+      },
+    ]
+  })
+}
+
+export const deptFlatEnum = collectLeafDeptEnum(deptEnum)
+
+const deptLeafIds = deptFlatEnum.map(item => item.value)
+
 const createMockUsers = count => {
   return Array.from({ length: count }, (_, idx) => {
     const index = idx + 1
-    const deptId = (index % deptEnum.length) + 1
+    const deptId = deptLeafIds[idx % deptLeafIds.length]
     const roleCode = roleEnum[index % roleEnum.length].value
     const status = index % 4 === 0 ? 0 : 1
     const createDay = String((index % 28) + 1).padStart(2, '0')

@@ -90,362 +90,395 @@
 
 
 <script setup lang="ts" name="Filter">
-  import '../style/index.scss'
-  import { ref, computed, watch, useAttrs, onMounted, onBeforeUnmount } from "vue";
-  import { useRoute } from 'vue-router'
-  import { ElForm, ElInput, ElInputNumber, ElSelect, ElCascader, ElDatePicker, ElButton, ElTooltip } from "element-plus";
-  import { CustomView, FilterItem, ProTableGlobalConfig, getInitFilterForm, getFilterParam, getFormItemProp, dateTypes, dateRangeTypes } from '@/components/base/ProTable'
-  import { getProTableFilterSlots, getShortcuts } from '@/components/base/ProTable/utils'
-  import { resolveFilterItems } from '@/components/base/ProTable/components/CustomView/utils/useFilterColumnConfig'
-  import { loadGlobalConfig } from '@/components/base/ProTable/components/CustomView/utils/useGlobalConfig'
-  import dayjs from 'dayjs'
-  const route = useRoute()
-  const attrs = useAttrs()
-  const props = withDefaults(
-    defineProps<{
-      // 搜索条件
-      filters?: FilterItem[],
-      // 自定义配置的id 区别每个custom
-      customId: string,
-      // 加载状态
-      loading?: boolean
-      // 是否加载自定义配置组件[CustomView] 默认开启， [ProTable]调用Filter设置False 由[ProTable]自己加载完整[CustomView]
-      // 既保证[ProTable]使用正常  同时[Filter]可以脱离[ProTable]正常使用（可以一个[Filter]搜索条件同时控制多个列表）
-      isShowCustomView?: boolean
-    }>(),
-    {
-      filters: () => [],
-      loading: false,
-      isShowCustomView: true,
+import '../style/index.scss'
+import { ref, computed, watch, useAttrs, onMounted, onBeforeUnmount, nextTick } from "vue";
+import { useRoute } from 'vue-router'
+import { ElForm, ElInput, ElInputNumber, ElSelect, ElCascader, ElDatePicker, ElButton, ElTooltip } from "element-plus";
+import { CustomView, FilterItem, ProTableGlobalConfig, getInitFilterForm, getFilterParam, getFormItemProp, dateTypes, dateRangeTypes } from '@/components/base/ProTable'
+import { getProTableFilterSlots, getShortcuts } from '@/components/base/ProTable/utils'
+import { resolveFilterItems } from '@/components/base/ProTable/components/CustomView/utils/useFilterColumnConfig'
+import { loadGlobalConfig } from '@/components/base/ProTable/components/CustomView/utils/useGlobalConfig'
+import dayjs from 'dayjs'
+const route = useRoute()
+const attrs = useAttrs()
+const props = withDefaults(
+  defineProps<{
+    // 搜索条件-[Form表单]用于请求接口 使用v-model绑定
+    modelValue?: any
+    // 搜索条件-字段信息集合
+    filters?: FilterItem[],
+    // 自定义配置的id 区别每个custom
+    customId: string,
+    // 加载状态
+    loading?: boolean
+    // 是否加载自定义配置组件[CustomView] 默认开启， [ProTable]调用Filter设置False 由[ProTable]自己加载完整[CustomView]
+    // 既保证[ProTable]使用正常  同时[Filter]可以脱离[ProTable]正常使用（可以一个[Filter]搜索条件同时控制多个列表）
+    isShowCustomView?: boolean
+  }>(),
+  {
+    filters: () => [],
+    loading: false,
+    isShowCustomView: true,
+  }
+)
+const emit = defineEmits<{
+  // 更新-搜索条件-[Form表单]用于请求接口 使用v-model绑定
+  (e: 'update:modelValue', filterParams),
+  // 点击查询
+  (e: 'query', filterParams),
+  // [搜索条件]重置
+  (e: 'filter-reset'),
+  // 打开[搜索条件]自定义设置
+  (e: 'open-filter-custom-view'),
+}>()
+
+
+const FormRef = ref<InstanceType<typeof ElForm>>()
+const ProTableCustomViewRef = ref<InstanceType<typeof CustomView>>()
+const filterSlots: string[] = getProTableFilterSlots(props.filters)
+
+// 自定义设置id customId未设置时使用route地址兜底, 这样同一路由下刷新仍可命中缓存，不同页面互不污染
+const customStoreId = computed(() => String(props.customId || route.path || ''))
+
+// ProTable全局配置
+const proTableGlobalConfig = ref<ProTableGlobalConfig>(loadGlobalConfig())
+// 事件 [全局配置] 自定义配置完成
+const onUpdateCustomGlobal = () =>{
+  proTableGlobalConfig.value = loadGlobalConfig()
+}
+
+// [全局配置] 展示行数
+const filterShowRow = computed(() => proTableGlobalConfig.value?.filterShowRow ?? 1)
+// 是否展开展示所有搜索条件
+const isShowAll = ref<boolean>(false)
+watch(
+  () => proTableGlobalConfig.value?.filterIsShowAll ?? false,
+  (filterIsShowAll) => {
+    isShowAll.value = filterIsShowAll
+  },
+  { immediate: true }  // 立即执行：组件初始化时也会进行一次列处理，替代原先的手动初始化赋值。
+)
+
+// 是否只有一行搜索添条件
+const isOneRow = computed(() => {
+  // 这个元素之前已经展示的搜索条件数量
+  const alreadyShowNum = handleFilters.value.filter((item: any) => (item.visible ?? true)).length;
+  return alreadyShowNum <= columnNum.value
+})
+// 可能不需要 isShowAll 单凭showRow便把所有搜索条件显示出来了
+const isShowAllByRow = computed(() => {
+  // 可展示的搜索条件总数 = 展示行数 * 每行个数
+  const totalShowNum =  filterShowRow.value * columnNum.value
+  // 这个元素之前已经展示的搜索条件数量
+  const alreadyShowNum = handleFilters.value.filter((item: any) => (item.visible ?? true)).length;
+  return alreadyShowNum <= totalShowNum
+})
+
+
+// 一行放多少个搜索条件
+const columnNum = ref(4)
+// 根据表单容器宽度计算每行可展示的筛选项数量
+const updateColumnNum = () => {
+  if (!FormRef.value) return
+  const width = FormRef.value.$el.offsetWidth
+  // 列数断点：不同宽度显示不同列数
+  if (width >= 1650) {
+    columnNum.value = 6
+  } else if (width >= 1300) {
+    columnNum.value = 5
+  } else if (width >= 1000) {
+    columnNum.value = 4
+  } else {
+    columnNum.value = 3
+  }
+}
+// 监听容器尺寸变化，窗口缩放或布局变化时实时更新列数
+const resizeObserver = new ResizeObserver(() => {
+  updateColumnNum()
+})
+// 组件挂载后开始监听表单容器宽度变化，用于动态计算每行显示的筛选项数量
+onMounted(()=>{
+  // 首次挂载后先主动计算一次，避免首屏未触发 ResizeObserver 时列数不准确
+  updateColumnNum()
+  FormRef.value && resizeObserver.observe(FormRef.value.$el)
+})
+// 组件卸载前断开监听，避免 ResizeObserver 持有引用导致内存泄漏
+onBeforeUnmount(() => {
+  resizeObserver.disconnect()
+})
+
+
+// 处理后的Filter
+const handleFilters = ref<FilterItem[]>([])
+
+// 刷新handleFilters 让vue重新渲染 避免数据变革页面未重新渲染
+const refreshHandleFilters = () => {
+  handleFilters.value = [...(handleFilters.value || [])]
+}
+
+// 是否展示该FilterItem
+const isShowFilterItem = (currentItem: any, currentIndex: number):boolean => {
+  // 如果当前搜索条件配置了 visible = false 则不展示
+  if (currentItem.visible === false) {
+    return false
+  }
+
+  // 可展示的搜索条件总数 = 展示行数 * 每行个数
+  const totalShowNum =  filterShowRow.value * columnNum.value
+  // 这个元素之前已经展示的搜索条件数量
+  const alreadyShowNum = handleFilters.value.filter((item: any, index: number) => (item.visible ?? true) && index < currentIndex).length;
+  return isShowAll.value || alreadyShowNum < totalShowNum
+}
+
+// 获取item的bind
+const getItemBind = (item: FilterItem) => {
+  const itemBind = {...item}
+  // 自定义字段初始默认值[value] 和element-plus[el-input]组件冲突 需要排除
+  delete itemBind.value
+  delete itemBind.slot
+  return itemBind
+}
+
+// Filters校验处理器
+const checkHandle = (item: FilterItem) => {
+  // 日期范围类型  prop才可以是数据
+  if (!dateRangeTypes.includes(item.type) && Array.isArray(item.prop)) {
+    throw new Error(`[Filter] 日期范围类型[${item.type}]的prop才可以使用数组`)
+  } else if (dateRangeTypes.includes(item.type) && (!Array.isArray(item.prop) || item.prop.length != 2)) {
+    throw new Error(`[Filter] 日期范围类型[${item.type}]的prop数组必须包括开始时间和结束时间字段`)
+  }
+}
+
+// Filters公共处理器
+const commonHandle = (item: FilterItem) => {
+  // 是否显示清除按钮
+  item.clearable = item.clearable ?? true
+}
+
+
+// 日期范围处理器
+const daterangeHandle = (item: FilterItem) => {
+  // 范围选择时选中日期所使用的当日内默认时刻
+  item.defaultTime = item.defaultTime ?? [new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 1, 1, 23, 59, 59)]
+  // 快捷选项
+  item.shortcuts = item.shortcuts ?? getShortcuts()
+}
+
+// Filters类型处理器
+const typeHandles = {
+  // Selecet选择器组件
+  select: (item: FilterItem) => {
+    // 多选情况下
+    if (item.multiple) {
+      item.collapseTags = item.collapseTags ?? true
+      item.collapseTagsTooltip = item.collapseTagsTooltip ?? true
     }
-  )
-  const emit = defineEmits<{
-    // 点击查询
-    (e: 'query', filterParams),
-    // [搜索条件]重置
-    (e: 'filter-reset'),
-    // 打开[搜索条件]自定义设置
-    (e: 'open-filter-custom-view'),
-  }>()
-  
-
-  const FormRef = ref<InstanceType<typeof ElForm>>()
-  const ProTableCustomViewRef = ref<InstanceType<typeof CustomView>>()
-  const filterSlots: string[] = getProTableFilterSlots(props.filters)
-
-  // 自定义设置id customId未设置时使用route地址兜底, 这样同一路由下刷新仍可命中缓存，不同页面互不污染
-  const customStoreId = computed(() => String(props.customId || route.path || ''))
-
-  // ProTable全局配置
-  const proTableGlobalConfig = ref<ProTableGlobalConfig>(loadGlobalConfig())
-  // 事件 [全局配置] 自定义配置完成
-  const onUpdateCustomGlobal = () =>{
-    proTableGlobalConfig.value = loadGlobalConfig()
-  }
-
-  // [全局配置] 展示行数
-  const filterShowRow = computed(() => proTableGlobalConfig.value?.filterShowRow ?? 1)
-  // 是否展开展示所有搜索条件
-  const isShowAll = ref<boolean>(false)
-  watch(
-    () => proTableGlobalConfig.value?.filterIsShowAll ?? false,
-    (filterIsShowAll) => {
-      isShowAll.value = filterIsShowAll
-    },
-    { immediate: true }  // 立即执行：组件初始化时也会进行一次列处理，替代原先的手动初始化赋值。
-  )
-  
-  // 是否只有一行搜索添条件
-  const isOneRow = computed(() => {
-    // 这个元素之前已经展示的搜索条件数量
-    const alreadyShowNum = handleFilters.value.filter((item: any) => (item.visible ?? true)).length;
-    return alreadyShowNum <= columnNum.value
-  })
-  // 可能不需要 isShowAll 单凭showRow便把所有搜索条件显示出来了
-  const isShowAllByRow = computed(() => {
-    // 可展示的搜索条件总数 = 展示行数 * 每行个数
-    const totalShowNum =  filterShowRow.value * columnNum.value
-    // 这个元素之前已经展示的搜索条件数量
-    const alreadyShowNum = handleFilters.value.filter((item: any) => (item.visible ?? true)).length;
-    return alreadyShowNum <= totalShowNum
-  })
-
-
-  // 一行放多少个搜索条件
-  const columnNum = ref(4)
-  // 根据表单容器宽度计算每行可展示的筛选项数量
-  const updateColumnNum = () => {
-    if (!FormRef.value) return
-    const width = FormRef.value.$el.offsetWidth
-    // 列数断点：不同宽度显示不同列数
-    if (width >= 1650) {
-      columnNum.value = 6
-    } else if (width >= 1300) {
-      columnNum.value = 5
-    } else if (width >= 1000) {
-      columnNum.value = 4
-    } else {
-      columnNum.value = 3
-    }
-  }
-  // 监听容器尺寸变化，窗口缩放或布局变化时实时更新列数
-  const resizeObserver = new ResizeObserver(() => {
-    updateColumnNum()
-  })
-  // 组件挂载后开始监听表单容器宽度变化，用于动态计算每行显示的筛选项数量
-  onMounted(()=>{
-    // 首次挂载后先主动计算一次，避免首屏未触发 ResizeObserver 时列数不准确
-    updateColumnNum()
-    FormRef.value && resizeObserver.observe(FormRef.value.$el)
-  })
-  // 组件卸载前断开监听，避免 ResizeObserver 持有引用导致内存泄漏
-  onBeforeUnmount(() => {
-    resizeObserver.disconnect()
-  })
-
-
-  // 搜索条件参数
-  const form = ref(getInitFilterForm(props.filters))
-
-  // 处理后的Filter
-  const handleFilters = ref<FilterItem[]>([])
-
-  // 刷新handleFilters 让vue重新渲染 避免数据变革页面未重新渲染
-  const refreshHandleFilters = () => {
-    handleFilters.value = [...(handleFilters.value || [])]
-  }
-
-  // 是否展示该FilterItem
-  const isShowFilterItem = (currentItem: any, currentIndex: number):boolean => {
-    // 如果当前搜索条件配置了 visible = false 则不展示
-    if (currentItem.visible === false) {
-      return false
-    }
-
-    // 可展示的搜索条件总数 = 展示行数 * 每行个数
-    const totalShowNum =  filterShowRow.value * columnNum.value
-    // 这个元素之前已经展示的搜索条件数量
-    const alreadyShowNum = handleFilters.value.filter((item: any, index: number) => (item.visible ?? true) && index < currentIndex).length;
-    return isShowAll.value || alreadyShowNum < totalShowNum
-  }
-
-  // 获取item的bind
-  const getItemBind = (item: FilterItem) => {
-    const itemBind = {...item}
-    // 自定义字段初始默认值[value] 和element-plus[el-input]组件冲突 需要排除
-    delete itemBind.value
-    delete itemBind.slot
-    return itemBind
-  }
-
-  // Filters校验处理器
-  const checkHandle = (item: FilterItem) => {
-    // 日期范围类型  prop才可以是数据
-    if (!dateRangeTypes.includes(item.type) && Array.isArray(item.prop)) {
-      throw new Error(`[Filter] 日期范围类型[${item.type}]的prop才可以使用数组`)
-    } else if (dateRangeTypes.includes(item.type) && (!Array.isArray(item.prop) || item.prop.length != 2)) {
-      throw new Error(`[Filter] 日期范围类型[${item.type}]的prop数组必须包括开始时间和结束时间字段`)
-    }
-  }
-
-  // Filters公共处理器
-  const commonHandle = (item: FilterItem) => {
-    // 是否显示清除按钮
-    item.clearable = item.clearable ?? true
-  }
-
-
-  // 日期范围处理器
-  const daterangeHandle = (item: FilterItem) => {
-    // 范围选择时选中日期所使用的当日内默认时刻
-    item.defaultTime = item.defaultTime ?? [new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 1, 1, 23, 59, 59)]
-    // 快捷选项
-    item.shortcuts = item.shortcuts ?? getShortcuts()
-  }
-
-  // Filters类型处理器
-  const typeHandles = {
-    // Selecet选择器组件
-    select: (item: FilterItem) => {
-      // 多选情况下
-      if (item.multiple) {
-        item.collapseTags = item.collapseTags ?? true
-        item.collapseTagsTooltip = item.collapseTagsTooltip ?? true
-      }
-      // tag 标签类型
-      item.tagType = 'primary'
-      // 选项是否可以被搜索
-      item.filterable = item.filterable ?? true
-      // 是否 远程调用接口获取下拉框的选项（枚举项）， 适用于后端枚举项来源于数据库 数据量过大需要搜索词过滤匹配场景（如下拉框选择用户表信息）
-      if (item.filterable && item.getSelectEnumItems && !item.enumItems) {
-        // 是否从服务器远程加载 参考 Element-plus[select] remote属性
-        item.remote = true
-        // 当输入值发生变化时触发的函数 参考 Element-plus[select] remote-method属性
-        item.remoteMethod = async (searchKey: string) => {
-          if (searchKey) {
-            try {
-              item.loading = true                 // 设置数据加载状态
-              refreshHandleFilters()  // 页面重新渲染
-              // 调用方法获取searchKey匹配的枚举项
-              const result = item.getSelectEnumItems(searchKey)
-              // 统一兼容 直接同步返回数据和异步返回(Promise<数据>)：避免把Promise本身赋给enumItems
-              item.enumItems = await Promise.resolve(result ?? [])
-              refreshHandleFilters()  // 页面重新渲染
-              } finally {
-              item.loading = false
-              refreshHandleFilters()  // 页面重新渲染
-            }
+    // tag 标签类型
+    item.tagType = 'primary'
+    // 选项是否可以被搜索
+    item.filterable = item.filterable ?? true
+    // 是否 远程调用接口获取下拉框的选项（枚举项）， 适用于后端枚举项来源于数据库 数据量过大需要搜索词过滤匹配场景（如下拉框选择用户表信息）
+    if (item.filterable && item.getSelectEnumItems && !item.enumItems) {
+      // 是否从服务器远程加载 参考 Element-plus[select] remote属性
+      item.remote = true
+      // 当输入值发生变化时触发的函数 参考 Element-plus[select] remote-method属性
+      item.remoteMethod = async (searchKey: string) => {
+        if (searchKey) {
+          try {
+            item.loading = true                 // 设置数据加载状态
+            refreshHandleFilters()  // 页面重新渲染
+            // 调用方法获取searchKey匹配的枚举项
+            const result = item.getSelectEnumItems(searchKey)
+            // 统一兼容 直接同步返回数据和异步返回(Promise<数据>)：避免把Promise本身赋给enumItems
+            item.enumItems = await Promise.resolve(result ?? [])
+            refreshHandleFilters()  // 页面重新渲染
+            } finally {
+            item.loading = false
+            refreshHandleFilters()  // 页面重新渲染
           }
         }
       }
-    },
-    // Cascader级联选择器
-    cascader: (item: FilterItem) => {
-      item.props = item.props ?? {}
-      // 	次级菜单的展开方式 'click' | 'hover'
-      item.props.expandTrigger = 'hover'
-      // 多选情况下
-      item.props.multiple = item.props.multiple ?? item.multiple
-      if (item.props.multiple) {
-        item.collapseTags = item.collapseTags ?? true
-        item.collapseTagsTooltip = item.collapseTagsTooltip ?? true
-      }
-      // 在选中节点改变时，是否返回由该节点所在的各级菜单的值所组成的数组，若设置 false，则只返回该节点的值
-      item.props.emitPath = item.props.emitPath ?? false
-      // tag 标签类型
-      item.tagType = 'primary'
-      // 选项是否可以被搜索
-      item.filterable = item.filterable ?? true
-    },
-    yearrange: daterangeHandle,
-    monthrange: daterangeHandle,
-    daterange: daterangeHandle,
-    datetimerange: daterangeHandle
+    }
+  },
+  // Cascader级联选择器
+  cascader: (item: FilterItem) => {
+    item.props = item.props ?? {}
+    // 	次级菜单的展开方式 'click' | 'hover'
+    item.props.expandTrigger = 'hover'
+    // 多选情况下
+    item.props.multiple = item.props.multiple ?? item.multiple
+    if (item.props.multiple) {
+      item.collapseTags = item.collapseTags ?? true
+      item.collapseTagsTooltip = item.collapseTagsTooltip ?? true
+    }
+    // 在选中节点改变时，是否返回由该节点所在的各级菜单的值所组成的数组，若设置 false，则只返回该节点的值
+    item.props.emitPath = item.props.emitPath ?? false
+    // tag 标签类型
+    item.tagType = 'primary'
+    // 选项是否可以被搜索
+    item.filterable = item.filterable ?? true
+  },
+  yearrange: daterangeHandle,
+  monthrange: daterangeHandle,
+  daterange: daterangeHandle,
+  datetimerange: daterangeHandle
+}
+
+
+// 处理Filter 并设置[handleFilters.value]
+const handleFilter = (list: FilterItem[]) => {
+  // 递归TableColumn处理
+  list.forEach(item => {
+    // 校验
+    checkHandle(item)
+    // 公共处理
+    commonHandle(item)
+    // 根据类型进行特殊处理 无对应类型使用默认处理器
+    item.type && typeHandles[item.type] ? typeHandles[item.type](item) : false
+  })
+  handleFilters.value = list
+}
+
+
+// 更新Filter内容区Tooltip提示  item.valueTooltip 如果有内容时 Tooltip组件会展示提示
+const updateFilterValueTooltip = (item: FilterItem) =>{
+  // 日期范围选择器
+  if (dateRangeTypes.includes(item.type)) {
+    const dateArray = form.value[getFormItemProp(item)]
+    if (Array.isArray(dateArray) && dateArray.length === 2) {
+      // 设置[Tooltip]提示内容
+      const dateFormat = getDateFormatByType(item.type)
+      const startText = dayjs(dateArray[0]).format(dateFormat)
+      const endText =   dayjs(dateArray[1]).format(dateFormat)
+      item.valueTooltip =  `[ ${startText}  至  ${endText} ]`
+      return
+    }
+
   }
+  // 设置[false]不展示Tooltip提示
+  item.valueTooltip = false
+}
+// 获取日期type对应的格式
+const getDateFormatByType = (type?: FilterItem['type']) => {
+  switch (type) {
+    case 'yearrange':
+      return 'YYYY'
+    case 'monthrange':
+      return 'YYYY-MM'
+    case 'daterange':
+      return 'YYYY-MM-DD'
+    case 'datetimerange':
+      return 'YYYY-MM-DD HH:mm:ss'
+    default:
+      return 'YYYY-MM-DD HH:mm:ss'
+  }
+}
 
 
-  // 处理Filter 并设置[handleFilters.value]
-  const handleFilter = (list: FilterItem[]) => {
-    // 递归TableColumn处理
-    list.forEach(item => {
-      // 校验
-      checkHandle(item)
-      // 公共处理
-      commonHandle(item)
-      // 根据类型进行特殊处理 无对应类型使用默认处理器
-      item.type && typeHandles[item.type] ? typeHandles[item.type](item) : false
+
+// ----------   监听外部Filters变化 按Custom自定义搜索条件(顺序+列字段属性[visible]) 并调用handleFilter重新渲染 ----------------
+watch(
+  () => props.filters,
+  (newFilters) => {
+    // [最终渲染列表字段] 用户自定义设置搜索条件字段（字段顺序 + visible）
+    // 代码配置搜索字段信息 和 浏览器保存用户自定义配置(搜索条件顺序+列字段属性[visible]) 进行合并
+    const customFilters = resolveFilterItems(newFilters || [], {
+      storageId: customStoreId.value,
+      usePersisted: true,
     })
-    handleFilters.value = list
+    handleFilter(customFilters)
+  },
+  {
+    // 深度监听：支持外部在原数组引用不变的情况下，直接修改列内部字段。
+    // 例如：columns[i].visible = false / columns[i].label = '新标题'
+    deep: true,
+    // 立即执行：组件初始化时也会进行一次列处理，替代原先的手动初始化赋值。
+    immediate: true,
   }
-
-
-  // 更新Filter内容区Tooltip提示  item.valueTooltip 如果有内容时 Tooltip组件会展示提示
-  const updateFilterValueTooltip = (item: FilterItem) =>{
-    // 日期范围选择器
-    if (dateRangeTypes.includes(item.type)) {
-      const dateArray = form.value[getFormItemProp(item)]
-      if (Array.isArray(dateArray) && dateArray.length === 2) {
-        // 设置[Tooltip]提示内容
-        const dateFormat = getDateFormatByType(item.type)
-        const startText = dayjs(dateArray[0]).format(dateFormat)
-        const endText =   dayjs(dateArray[1]).format(dateFormat)
-        item.valueTooltip =  `[ ${startText}  至  ${endText} ]`
-        return
-      }
-
-    }
-    // 设置[false]不展示Tooltip提示
-    item.valueTooltip = false
-  }
-  // 获取日期type对应的格式
-  const getDateFormatByType = (type?: FilterItem['type']) => {
-    switch (type) {
-      case 'yearrange':
-        return 'YYYY'
-      case 'monthrange':
-        return 'YYYY-MM'
-      case 'daterange':
-        return 'YYYY-MM-DD'
-      case 'datetimerange':
-        return 'YYYY-MM-DD HH:mm:ss'
-      default:
-        return 'YYYY-MM-DD HH:mm:ss'
-    }
-  }
-
-
-
-
-  // 外部 Filters 发生变化后，重新生成内部可渲染列。
-  watch(
-    () => props.filters,
-    (newFilters) => {
-      // [最终渲染列表字段] 用户自定义设置搜索条件字段（字段顺序 + visible）
-      // 代码配置搜索字段信息 和 浏览器保存用户自定义配置(列顺序+列字段属性[visible]) 进行合并
-      const customFilters = resolveFilterItems(newFilters || [], {
-        storageId: customStoreId.value,
-        usePersisted: true,
-      })
-      handleFilter(customFilters)
-    },
-    {
-      // 深度监听：支持外部在原数组引用不变的情况下，直接修改列内部字段。
-      // 例如：columns[i].visible = false / columns[i].label = '新标题'
-      deep: true,
-      // 立即执行：组件初始化时也会进行一次列处理，替代原先的手动初始化赋值。
-      immediate: true,
-    }
-  )
+)
 
   
-  // [搜索条件字段]自定义配置完成
-  const onUpdateCustomFilter = (customFilters: FilterItem[]) =>{
-    handleFilter(customFilters)
+// [搜索条件字段]自定义配置完成
+const onUpdateCustomFilter = (customFilters: FilterItem[]) =>{
+  handleFilter(customFilters)
+}
+
+
+// ----------   搜索条件-[Form表单]用于请求接口 （支持外部参数同步搜索过滤）  --------------------
+const form = ref(getInitFilterForm(props.filters))
+// 获取查询参数
+const getQueryParam = () => {
+  const filterParam = getFilterParam(handleFilters.value, form.value)
+  // 优先filterParam
+  return {
+    ...(props.modelValue ?? {}),
+    ...filterParam
   }
+}
 
+// 监听form同步到外部modelValue
+if (props.modelValue !== undefined){
+  watch(() => form.value, () => {
+    emit('update:modelValue', getQueryParam())
+  }, { deep: true, immediate: true })
+}
 
-  // 获取查询参数
-  const getQueryParam = () => {
-    return getFilterParam(handleFilters.value, form.value)
-  }
-
-  // 查询
-  const query = () => {
-    emit('query', getQueryParam())
-  }
-
-  // 重置
-  const reset = () => {
-    form.value = getInitFilterForm(props.filters)
-    emit('filter-reset')
-  }
-
-  // 切换是否展开展示所有搜索条件
-  const switchIsShowAll = () => {
-    isShowAll.value = !isShowAll.value
-  }
-
-  // [Filter操作-打开自定义设置] 打开Table列字段自定义设置组件
-  const openFilterCustomView = () => {
-    // 是否加载自定义配置组件[CustomView] 默认开启， [ProTable]调用Filter设置False 由[ProTable]自己加载完整[CustomView]
-    if (props.isShowCustomView) {
-      ProTableCustomViewRef.value.openDialog('filter_config')
-    } else {
-      emit('open-filter-custom-view')
+// 监听外部modelValue同步到内部form
+let isUpdateFromLock = false  // 枷锁防止父子组件互相无限调用
+if (props.modelValue !== undefined){
+  watch(() => props.modelValue, (newModelValue) => {
+    if (newModelValue !== undefined && !isUpdateFromLock) {
+      isUpdateFromLock = true
+      // 优先ModelValue
+      form.value = { ...form.value, ...newModelValue }
+      nextTick(() => {
+        isUpdateFromLock = false
+      })
     }
-  }
+  }, {  deep: true })
+}
 
-  // 导出方法
-  const expose = {
-    // 获取Filter搜索条件查询参数
-    getQueryParam: getQueryParam,
-    // [全局配置] 自定义配置完成
-    onUpdateCustomGlobal: onUpdateCustomGlobal,
-    // [搜索条件字段]自定义配置完成
-    onUpdateCustomFilter: onUpdateCustomFilter
-  }
 
-  defineExpose(expose)
+
+// 查询
+const query = () => {
+  const queryParam = getQueryParam()
+  emit('update:modelValue', queryParam)
+  emit('query', queryParam)
+}
+
+// 重置
+const reset = () => {
+  form.value = getInitFilterForm(props.filters)
+  emit('filter-reset')
+}
+
+// 切换是否展开展示所有搜索条件
+const switchIsShowAll = () => {
+  isShowAll.value = !isShowAll.value
+}
+
+// [Filter操作-打开自定义设置] 打开Table列字段自定义设置组件
+const openFilterCustomView = () => {
+  // 是否加载自定义配置组件[CustomView] 默认开启， [ProTable]调用Filter设置False 由[ProTable]自己加载完整[CustomView]
+  if (props.isShowCustomView) {
+    ProTableCustomViewRef.value.openDialog('filter_config')
+  } else {
+    emit('open-filter-custom-view')
+  }
+}
+
+// 导出方法
+const expose = {
+  // 获取Filter搜索条件查询参数
+  getQueryParam: getQueryParam,
+  // [全局配置] 自定义配置完成
+  onUpdateCustomGlobal: onUpdateCustomGlobal,
+  // [搜索条件字段]自定义配置完成
+  onUpdateCustomFilter: onUpdateCustomFilter
+}
+
+defineExpose(expose)
 
 </script>
 

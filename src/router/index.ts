@@ -14,8 +14,26 @@ const routers:RouteRecordRaw[] = [
     children: [
       {
         path: '/test',
-        component: () => import('@/views/table-test.vue'),
+        component: () => import('@/views/test/table-test.vue'),
         name: 'test',
+        meta: {
+          hidden: true,
+          canTo: true
+        }
+      },
+      {
+        path: '/test2',
+        component: () => import('@/views/test/table-test2.vue'),
+        name: 'test2',
+        meta: {
+          hidden: true,
+          canTo: true
+        }
+      },
+      {
+        path: '/test3',
+        component: () => import('@/views/test/table-test3.vue'),
+        name: 'test3',
         meta: {
           hidden: true,
           canTo: true

@@ -3,11 +3,13 @@
     <Filter
       v-show="filters && filters.length > 0"
       ref="FilterRef"
+      :model-value="modelValue"
       :filters="filters"
       :custom-id="customId"
       :loading="loading"
       :is-show-custom-view="false"
       @query="onFilterQuery"
+      @update:model-value="newModelValue => emit('update:modelValue', newModelValue)"
       @filter-reset="emit('filter-reset')"
       @open-filter-custom-view="openFilterCustomView"
     >
@@ -121,6 +123,7 @@
   const slots = useSlots()
   const props = withDefaults(
     defineProps<{
+      modelValue?: any              // 搜索条件-[Form表单]用于请求接口 使用v-model绑定
       filters?: FilterItem[]        // 搜索条件
       columns?: TableColumnItem[]   // 列表字段
       getTableData: (params: { [key:string]:any } & PageParam) => PageResponse | Promise<PageResponse> // 获取数据方法
@@ -146,6 +149,9 @@
   )
 
   const emit = defineEmits<{
+    // 更新-搜索条件-[Form表单]用于请求接口 使用v-model绑定
+    (e: 'update:modelValue', filterParams),
+    // [搜索条件]重置
     (e: 'filter-reset'),
   }>()
 
@@ -547,7 +553,7 @@
 
   // --------------------   对外暴露方法   --------------------
 
-  const expose: any & ElTableFns = {
+  const expose = {
     // 获取查询参数
     getQueryParam: getQueryParam,
     // 搜索条件参数变更触发查询事件

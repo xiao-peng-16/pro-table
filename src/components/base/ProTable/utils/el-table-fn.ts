@@ -14,7 +14,7 @@ export interface ElTableFns {
   getTableRootEl: () => HTMLElement | null,
 }
 
-export const getElTableFns = (tatget: ElTableFns) => {
+export const getElTableFns = (tatget) => {
   return {
     clearSelection: tatget?.clearSelection,
     getSelectionRows: tatget?.getSelectionRows,

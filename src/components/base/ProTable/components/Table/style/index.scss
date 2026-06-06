@@ -1,0 +1,71 @@
+.table-wrapper {
+    width: 100%;
+    position: relative;
+}
+
+.emptyData{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+}
+
+// --------------------   表格拖拽视觉反馈   ----------------------------------------
+// 以下 class 由 Sortable / vue-draggable-plus 在拖拽过程中自动添加：
+// - pro-table-drag-ghost：占位行，表示当前拖拽项将插入的位置；
+// - pro-table-drag-chosen：鼠标按下后被选中的原始行；
+// - pro-table-dragging：跟随鼠标移动的拖拽镜像行。
+// 这里仅增强拖拽过程中的视觉提示，不参与数据排序逻辑。
+
+// 占位行：用蓝色横线标识“松手后会插入到这里”。
+.pro-table-drag-ghost {
+    position: relative;
+    opacity: 1;
+
+    // 给占位行一个极浅的蓝色底，避免只有横线时在复杂表格中不易定位。
+    // td 设置为 relative，是为了让每个单元格顶部的 ::before 能稳定定位；
+    // 直接在 tr 上画伪元素在 table-row 布局中兼容性较弱。
+    td {
+        position: relative;
+        background: rgba(64, 158, 255, 0.06) !important;
+    }
+
+    // 蓝色插入线：每个单元格顶部画一段线，组合成一条横跨整行的插入线。
+    td::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: -1px;
+        height: 3px;
+        background: #409eff;
+        box-shadow: 0 0 0 1px rgba(64, 158, 255, 0.16);
+        z-index: 3;
+        pointer-events: none;
+    }
+
+    // 首尾单元格给蓝线加圆角，让整条插入线看起来更像一个独立提示条。
+    td:first-child::before {
+        left: 12px;
+        border-radius: 999px 0 0 999px;
+    }
+
+    td:last-child::before {
+        right: 12px;
+        border-radius: 0 999px 999px 0;
+    }
+}
+
+// 被选中的原始行：拖拽开始后保持轻微高亮，帮助用户确认拖的是哪一行。
+.pro-table-drag-chosen {
+    td {
+        background: rgba(64, 158, 255, 0.04) !important;
+    }
+}
+
+// 跟随鼠标移动的拖拽镜像行：只调整鼠标状态和层级，避免被表格内容遮挡。
+.pro-table-dragging {
+    cursor: grabbing;
+    z-index: 10;
+}

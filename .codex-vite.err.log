@@ -1,0 +1,7 @@
+[33mYou are using Node.js 20.16.0. Vite requires Node.js version 20.19+ or 22.12+. Please upgrade your Node.js version.[39m
+[31merror when starting dev server:
+Error: listen UNKNOWN: unknown error 0.0.0.0:5174
+    at Server.setupListenHandle [as _listen2] (node:net:1882:21)
+    at listenInCluster (node:net:1961:12)
+    at doListen (node:net:2135:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)[39m

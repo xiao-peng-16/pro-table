@@ -1,0 +1,320 @@
+.form-item {
+  .el-form-item__label {
+    height: initial;
+    &::before {
+      margin-top: 4px;
+      // margin-right: 4px;
+      color: var(--el-color-danger);
+      content: '';
+      // width: 7px;
+    }
+  }
+  &.label-top{
+    .el-form-item__label {
+      height: max-content;
+    }
+  }
+  .el-form-item__content {
+    margin-left: 0px !important; //针对label不显示的时候，content宽度铺满
+    flex-direction: column;
+    justify-content: center;
+    align-items: unset;
+    height: initial;
+    /**内容区域**/
+    .content {
+      width: 100%;
+      display: flex;
+      /**自定义区域**/
+      & > div:not(.after, .before) {
+        width: inherit;
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        &::-webkit-scrollbar {
+          display: none; /* Chrome Safari */
+          scrollbar-width: none; /* firefox */
+          -ms-overflow-style: none; /* IE 10+ */
+        }
+        // flex-wrap: wrap;
+        // flex-direction: row;
+        // padding-bottom: 1px;
+        .cxp-select {
+          width: inherit;
+          & > div {
+            width: inherit;
+          }
+        }
+      }
+      /**后插槽**/
+      & > .after {
+        margin-left: 12px;
+        & + div:not(.after, .before) {
+          flex: 1;
+        }
+      }
+      /**前插槽**/
+      & > .before {
+        margin-right: 12px;
+        & + div:not(.after, .before) {
+          flex: 1;
+        }
+      }
+    }
+    /**错误提示**/
+    .error {
+      // height: 12px;
+      line-height: 12px;
+      margin-top: 4px;
+      display: flex;
+      position: absolute;
+      top: 100%;
+      align-items: center;
+      & > .svg {
+        margin-right: 6px;
+        width: 12px;
+        height: 12px;
+        display: flex;
+        svg {
+          display: inline-block;
+          width: inherit;
+          height: inherit;
+        }
+      }
+      & > span {
+        color: var(--el-color-danger);
+        font-size: 12px;
+      }
+    }
+  }
+  &.is-required:not(.is-no-asterisk).asterisk-left > .el-form-item__label:before {
+    color: var(--el-color-danger);
+    content: '*';
+  }
+}
+// /**表单-普通样式**/
+// .cxp-form.default-style {
+//   /**默认只有item组件下的场景：**/
+//   & > .table {
+//     display: grid;
+//     border: 1px solid transparent;
+//     grid-template-columns: repeat(1, minmax(200px, 1fr));
+//     gap: 1px;
+//     // background-color: #dee2e6; /* 设置背景色 */
+//     padding-bottom: 0px;
+//     position: relative;
+
+//     & > div {
+//       min-height: 36px;
+//       margin-bottom: 0px;
+//       background-color: white;
+//       border-width: 0;
+//       /*表格item样式*/
+//       .el-form-item__label {
+//         // background: #f2f3f5;
+//         padding-right: 0px;
+//         height: initial;
+//         justify-content: flex-start;
+//         border-right: 1px solid transparent;
+//         padding: 0px 5px;
+//         align-items: center;
+//         font-weight: 400;
+//         color: #303133;
+//         line-height: 20px;
+//         font-size: 14px;
+//         &::before {
+//           margin-top: 4px;
+//           margin-right: 4px;
+//           color: #f55352;
+//           content: '';
+//           width: 7px;
+//         }
+//       }
+//       .el-form-item__content {
+//         height: initial;
+//         padding: 0px 6px;
+//         & > div {
+//           height: initial;
+//           margin-top: 4px;
+//           margin-bottom: 4px;
+//         }
+//         & > .el-textarea {
+//           height: calc(100% - 8px);
+//           .el-textarea__inner {
+//             height: 100%;
+//           }
+//         }
+//       }
+//     }
+//     /** 合并两列**/
+//     & > .span2 {
+//       grid-column-start: span 2;
+//       // .el-form-item__label {
+//       //   width: 15%;
+//       // }
+//     }
+//     /** 合并三列**/
+//     & > .span3 {
+//       grid-column-start: span 3;
+//       // .el-form-item__label {
+//       //   width: 10%;
+//       // }
+//     }
+//   }
+//   /*双列样式*/
+//   &.two-col > .table {
+//     grid-template-columns: repeat(2, minmax(200px, 1fr));
+//   }
+//   /*三列样式*/
+//   &.three-col > .table {
+//     grid-template-columns: repeat(3, minmax(200px, 1fr));
+//   }
+//    /*四列样式*/
+//    &.four-col > .table {
+//     grid-template-columns: repeat(4, minmax(200px, 1fr));
+//   }
+// }
+// /**表单-页面样式-带表格**/
+// .cxp-form.table-style {
+//   /**默认只有item组件下的场景：**/
+//   & > .table {
+//     display: grid;
+//     border: 1px solid #dee2e6;
+//     grid-template-columns: repeat(3, minmax(200px, 1fr));
+//     gap: 1px;
+//     background-color: #dee2e6; /* 设置背景色 */
+//     padding-bottom: 0px;
+//     position: relative;
+
+//     & > div {
+//       min-height: 36px;
+//       margin-bottom: 0px;
+//       background-color: white;
+//       border-width: 0;
+//       /*表格item样式*/
+//       .el-form-item__label {
+//         background: #f2f3f5;
+//         padding-right: 0px;
+//         height: initial;
+//         justify-content: flex-start;
+//         border-right: 1px solid #dee2e6;
+//         padding: 0px 5px;
+//         align-items: center;
+//         font-weight: 400;
+//         color: #303133;
+//         line-height: 20px;
+//         font-size: 14px;
+//         &::before {
+//           margin-top: 4px;
+//           margin-right: 4px;
+//           color: #f55352;
+//           content: '';
+//           width: 7px;
+//         }
+//       }
+//       .el-form-item__content {
+//         height: initial;
+//         padding: 0px 6px;
+//         & > div {
+//           height: initial;
+//           margin-top: 4px;
+//           margin-bottom: 4px;
+//         }
+//         & > .el-textarea {
+//           height: calc(100% - 8px);
+//           .el-textarea__inner {
+//             height: 100%;
+//           }
+//         }
+//       }
+//     }
+//     /** 合并两列**/
+//     & > .span2 {
+//       grid-column-start: span 2;
+//       // .el-form-item__label {
+//       //   width: 15%;
+//       // }
+//     }
+//     /** 合并三列**/
+//     & > .span3 {
+//       grid-column-start: span 3;
+//       // .el-form-item__label {
+//       //   width: 10%;
+//       // }
+//     }
+//   }
+//   /*双列样式*/
+//   &.two-col > .table {
+//     grid-template-columns: repeat(2, minmax(200px, 1fr));
+//   }
+//   /*单列样式*/
+//   &.fix-col > .table {
+//     grid-template-columns: repeat(1, minmax(200px, 1fr));
+//   }
+//   /**带展开组件下的场景：**/
+//   & > .cxp-collapse {
+//     /*grid布局,默认为三列*/
+//     .el-collapse-item__content {
+//       display: grid;
+//       border: 1px solid #dee2e6;
+//       grid-template-columns: repeat(3, minmax(200px, 1fr));
+//       gap: 1px;
+//       background-color: #dee2e6; /* 设置背景色 */
+//       padding-bottom: 0px;
+//       position: relative;
+
+//       & > div {
+//         min-height: 36px;
+//         margin-bottom: 0px;
+//         background-color: white;
+//         border-width: 0;
+//         /*表格item样式*/
+//         .el-form-item__label {
+//           background: #f2f3f5;
+//           padding-right: 0px;
+//           height: initial;
+//           justify-content: flex-start;
+//           border-right: 1px solid #dee2e6;
+//           padding: 0px 5px;
+//           align-items: center;
+//           font-weight: 400;
+//           color: #303133;
+//           line-height: 20px;
+//           font-size: 14px;
+//           &::before {
+//             margin-top: 4px;
+//             margin-right: 4px;
+//             color: #f55352;
+//             content: '';
+//             width: 7px;
+//           }
+//         }
+//         .el-form-item__content {
+//           height: initial;
+//           padding: 0px 6px;
+//           & > div {
+//             height: initial;
+//             margin-top: 4px;
+//             margin-bottom: 4px;
+//           }
+//         }
+//       }
+//       /** 合并两列**/
+//       & > .span2 {
+//         grid-column-start: span 2;
+//       }
+//       /** 合并三列**/
+//       & > .span3 {
+//         grid-column-start: span 3;
+//       }
+//     }
+//   }
+//   /*双列样式*/
+//   &.two-col > .cxp-collapse .el-collapse-item__content {
+//     grid-template-columns: repeat(2, minmax(200px, 1fr));
+//   }
+//   /*单列样式*/
+//   &.fix-col > .cxp-collapse .el-collapse-item__content {
+//     grid-template-columns: 1fr;
+//   }
+// }
+

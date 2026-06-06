@@ -1,0 +1,74 @@
+.filter-wrapper {
+  .filter-form {
+    position: relative;
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 11px var(--filter-item-gap, 12px);  // [--filter-item-gap] 由Filter.vue传入
+    .filter-item {
+      flex: 0 0 calc(
+        (100% - (var(--filter-column-num, 1) - 1) * var(--filter-item-gap, 12px)) /
+          var(--filter-column-num, 1)
+      );  // [--filter-column-num, --filter-item-gap] 由Filter.vue传入
+      min-width: var(--filter-item-min-width, 268px); // [--filter-item-min-width] 由Filter.vue传入
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--el-border-color);
+      box-sizing: border-box;
+      padding: 1px 0;
+      margin-top: 0 !important;   // 覆盖Element-plus样式
+      margin-bottom: 0 !important;// 覆盖Element-plus样式
+      // 固定筛选项底色，避免迁移后透出页面浅灰背景导致标题区不是纯白。
+      background-color: var(--el-fill-color-blank);
+
+      // 表单标签高度和 Element Plus 主字重，这里还原迁移组件的标题样式。
+      & .el-form-item__label {
+        height: max-content !important;
+        padding: 0 11px;
+        font-weight: 500;
+        line-height: normal !important;
+        border-right: 1px solid var(--el-border-color);
+      }
+
+      .el-date-editor,
+      .el-cascader,
+      .el-select__wrapper,
+      .el-input__wrapper,
+      .el-input,
+      .el-input-number {
+        width: 100%;
+        outline-color: none;
+        box-shadow: none;
+        &:hover {
+          box-shadow: none;
+          outline-color: none;
+        }
+        &.is-force {
+          outline-color: none;
+        }
+      }
+    }
+
+    .el-date-editor {     // 日期组件
+      box-sizing: border-box;
+      padding-right: 0 !important;
+      cursor: pointer;
+      .el-input__icon:first-of-type { // first-of-type 选择第一个icon，避免影响清除按钮的icon
+        display: none;  // 隐藏icon 减少内容width占用
+      }
+      .el-input__inner {
+        cursor: pointer;
+      }
+      .el-range-input {   // 日期范围class
+        cursor: pointer;
+        flex: 10;         // 增加时间内容展示width占比
+        max-width: 76px;  // 防止展示时分秒 width不够只能战术部分
+      }
+    }
+
+    .filter-item.filter-item-btn-wrapper{
+      border: none;
+    }
+  }
+}
+

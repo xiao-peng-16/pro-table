@@ -1,0 +1,15 @@
+.table-custom-view, .filter-custom-view {
+    .el-table__row{
+        // 防止transform上移下移元素造成z-index失效
+        position: relative;
+        z-index: 0;
+    }
+}
+
+
+// 底部按钮区container
+.custom-btn__container {
+    padding: 10px 0px;
+    display: flex;
+    justify-content: flex-end;
+}

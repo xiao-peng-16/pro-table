@@ -1,0 +1,156 @@
+.cxp-collapse {
+  .el-collapse-item__wrap {
+    position: relative;
+    border-width: 0px;
+  }
+  .cxp-collapse-item {
+    .el-collapse-item__header {
+      height: auto;
+      margin-bottom: 16px;
+      border-width: 0px;
+      display: flex;
+      flex-wrap: wrap;
+      /* 标题 */
+      .layout {
+        width: max-content;
+        position: relative;
+        display: flex;
+        align-items: center;
+        .title {
+          height: 22px;
+          font-size: 16px;
+          font-weight: bolder;
+          // color: #202d40;
+          line-height: 22px;
+        }
+        .subtitle {
+          height: 20px;
+          font-size: 14px;
+          font-weight: normal;
+          // color: #999ea6;
+          line-height: 20px;
+          margin-left: 12px;
+        }
+      }
+      /* 展开icon */
+      .el-collapse-item__arrow {
+        margin-left: 2px;
+        width: 10px;
+        height: 10px;
+        // color: #999ea6;
+        svg {
+          width: initial;
+          height: initial;
+        }
+        transform: rotate(90deg);
+        &.is-active {
+          transform: rotate(-90deg);
+        }
+      }
+      .arrow-title {
+        position: relative;
+        width: 24px;
+        height: 12px;
+        margin-left: 20px;
+        font-weight: normal;
+        &::before {
+          position: absolute;
+          top: 0;
+          left: 0;
+          content: '展开';
+          width: 24px;
+          height: 12px;
+          font-size: 12px;
+          line-height: 12px;
+          // color: #999ea6;
+        }
+      }
+      &.is-active {
+        .arrow-title::before {
+          content: '收起';
+        }
+      }
+      /* 右侧插槽 */
+      .after {
+        flex: 1;
+        order: 1;
+        display: flex;
+        justify-content: flex-end;
+        .cxp-button {
+          &.el-button {
+            padding: 0px 12px;
+            height: 24px;
+            font-size: 12px;
+          }
+          & + .cxp-button {
+            margin-left: 8px;
+          }
+        }
+        .cxp-btn-group {
+          gap: 8px;
+          .cxp-button + .cxp-button {
+            margin-left: 0px;
+          }
+        }
+      }
+    }
+  }
+  /* 默认间距 */
+  .cxp-collapse-item + .cxp-collapse-item {
+    margin-top: 20px;
+  }
+  /* read-only 模式 折叠不可点击 */
+  /* 全部设置 */
+  &.read-only {
+    .cxp-collapse-item {
+      .el-collapse-item__header {
+        // pointer-events: none;
+        &:hover {
+          cursor: default; /* 取消鼠标悬停样式 */
+        }
+        & > i,
+        .arrow-title {
+          display: none;
+        }
+      }
+    }
+    /* 单个默认设置 */
+    .default {
+      .el-collapse-item__header {
+        pointer-events: initial;
+        &:hover {
+          cursor: pointer; /* 取消鼠标悬停样式 */
+        }
+        & > i,
+        .arrow-title {
+          display: block;
+        }
+      }
+    }
+  }
+  /* 单个item设置 */
+  .read-only {
+    .el-collapse-item__header {
+      // pointer-events: none;
+      &:hover {
+        cursor: default; /* 取消鼠标悬停样式 */
+      }
+      & > i,
+      .arrow-title {
+        display: none;
+      }
+    }
+  }
+}
+.cxp-collapse.el-collapse {
+  border-width: 0px;
+}
+.cxp-dialog {
+  .el-dialog__body {
+    /* 默认间距 */
+    .cxp-collapse-item + .cxp-collapse-item {
+      margin-top: 28px;
+    }
+  }
+}
+
